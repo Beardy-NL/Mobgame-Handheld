@@ -284,18 +284,52 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   addEventListener('resize', scale);
   scale();
 
-  let soundOn = false, ctx = null;
-  const tones = {up: 660, down: 440, left: 520, right: 590, a: 880, b: 330, start: 990};
-  const beep = (k) => {
-    if (!soundOn) return;
+  // ---------- Sound engine: everything is silent unless SOUND ON ----------
+  let soundOn = false, ctx = null, master = null, noiseBuf = null;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const audio = () => {
+    if (!AC) return null;
     try {
-      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'square'; o.frequency.value = tones[k] || 500;
-      g.gain.setValueAtTime(0.06, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.09);
-      o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.1);
+      if (!ctx) {
+        ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+        noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.6), ctx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+    } catch (e) { return null; }
+    return ctx;
+  };
+  const sfx = (f, d = 0.08, slide = 0, type = 'square', vol = 0.045, delay = 0) => {
+    if (!soundOn || !audio()) return;
+    try {
+      const t0 = ctx.currentTime + delay, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t0);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + d);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+      o.connect(g).connect(master); o.start(t0); o.stop(t0 + d + 0.03);
     } catch (e) {}
+  };
+  const noise = (d = 0.2, vol = 0.05, freq = 1200, delay = 0, endFreq = 0) => {
+    if (!soundOn || !audio()) return;
+    try {
+      const t0 = ctx.currentTime + delay, s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = noiseBuf; fl.type = 'lowpass'; fl.frequency.setValueAtTime(freq, t0);
+      if (endFreq) fl.frequency.exponentialRampToValueAtTime(endFreq, t0 + d);
+      g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+      s.connect(fl).connect(g).connect(master); s.start(t0); s.stop(t0 + d + 0.02);
+    } catch (e) {}
+  };
+  const tune = (notes, step = 0.09, type = 'square', vol = 0.04) =>
+    notes.forEach((n, i) => { if (n) sfx(n, step * 0.9, 0, type, vol, i * step); });
+  // Subtle button clicks
+  const ui = (k) => {
+    if (k === 'start') { sfx(1175, 0.03, 0, 'square', 0.016); sfx(1568, 0.04, 0, 'square', 0.016, 0.035); return; }
+    if (k === 'a') { sfx(1046, 0.04, 784, 'square', 0.018); return; }
+    if (k === 'b') { sfx(698, 0.04, 523, 'square', 0.018); return; }
+    sfx({up: 932, down: 784, left: 831, right: 880}[k] || 850, 0.02, 0, 'triangle', 0.028);
+    noise(0.012, 0.01, 3500);
   };
 
   const sound = document.getElementById('sound');
@@ -307,7 +341,8 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     document.getElementById('sndIcon').innerHTML = soundOn
       ? '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>'
       : '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/>';
-    beep('start');
+    if (soundOn) { audio(); tune([784, 1046], 0.07, 'triangle', 0.04); }
+    else if (ctx) { try { ctx.suspend(); } catch (e) {} }
   });
 
   const btn = k => document.querySelector('[data-k="' + k + '"]');
@@ -327,21 +362,6 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     dots += '<circle cx="' + ((i * step + x) * P + P / 2) + '" cy="' + (y * P + P / 2) + '" r="' + (on === '1' ? 4.3 : 1.4) + '"' + (on === '1' ? '' : ' opacity=".16"') + '/>';
   })));
   document.getElementById('logo').innerHTML = '<svg viewBox="0 0 ' + cols * P + ' ' + 7 * P + '" fill="#303c2b" aria-hidden="true">' + dots + '</svg>';
-
-  // ---------- Sound effects ----------
-  const AC = window.AudioContext || window.webkitAudioContext;
-  const sfx = (f, d = 0.08, slide = 0, type = 'square', vol = 0.045) => {
-    if (!soundOn || !AC) return;
-    try {
-      ctx = ctx || new AC();
-      if (ctx.state === 'suspended') ctx.resume();
-      const t0 = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = type; o.frequency.setValueAtTime(f, t0);
-      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + d);
-      g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
-      o.connect(g).connect(ctx.destination); o.start(t0); o.stop(t0 + d + 0.02);
-    } catch (e) {}
-  };
 
   // ---------- Shared helpers ----------
   const INK = '#303c2b', MID = '#5c6845', SOFT = '#7c8660';
@@ -382,7 +402,11 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     G.state = s; G.k.view.dataset.state = s;
     G.k.mid.textContent = s === 'play' ? 'START · PAUSE' : 'B · MENU';
     if (s === 'pause') G.k.msg.innerHTML = '<b>PAUSED</b>START · RESUME<i>B · MENU</i>';
-    if (s === 'over') { G.k.msg.innerHTML = msg; G.overAt = performance.now(); }
+    if (s === 'over') {
+      G.k.msg.innerHTML = msg; G.overAt = performance.now();
+      if (msg.includes('WIN!')) tune([523, 659, 784, 1046, 0, 784, 1046], 0.1, 'square', 0.04);
+      else tune([494, 440, 392, 330, 262], 0.14, 'triangle', 0.05);
+    }
   };
   const overMsg = (G, label, digits) => {
     const isBest = saveBest(G.id, G.score);
@@ -417,8 +441,8 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     star.stars = Array.from({length: 70}, () => ({x: Math.random() * w, y: Math.random() * h, l: Math.floor(Math.random() * 3)}));
     star.hud();
   };
-  star.start = () => { star.reset(); setState(star, 'play'); sfx(440, 0.25, 880, 'triangle'); };
-  star.shoot = () => { star.bullets.push({x: star.x, y: star.y - 4 * star.U}); sfx(1300, 0.06, 500); };
+  star.start = () => { star.reset(); setState(star, 'play'); tune([392, 523, 659, 784], 0.07, 'square', 0.035); };
+  star.shoot = () => { star.bullets.push({x: star.x, y: star.y - 4 * star.U}); sfx(1300, 0.06, 500, 'square', 0.022); };
   star.boom = (x, y, n = 14) => {
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, v = (10 + Math.random() * 30) * star.U;
@@ -430,12 +454,12 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     if (k === 'b' && star.dashT <= 0 && star.dashCd <= 0) {
       if (held.has('left')) star.face = -1;
       if (held.has('right')) star.face = 1;
-      star.dashT = 0.16; star.dashCd = 0.7; sfx(200, 0.15, 900, 'sawtooth', 0.035);
+      star.dashT = 0.16; star.dashCd = 0.7; sfx(300, 0.14, 1200, 'triangle', 0.035); noise(0.14, 0.025, 1500, 0, 6000);
     }
   };
   const overlap = (ax, ay, aw, ah, bx, by, bw, bh) => Math.abs(ax - bx) * 2 < aw + bw && Math.abs(ay - by) * 2 < ah + bh;
   star.hit = () => {
-    star.lives--; star.inv = 2; star.boom(star.x, star.y, 22); sfx(160, 0.45, 40, 'sawtooth', 0.07);
+    star.lives--; star.inv = 2; star.boom(star.x, star.y, 22); noise(0.5, 0.09, 1600, 0, 120); sfx(160, 0.4, 40, 'sawtooth', 0.035);
     if (star.lives <= 0) { star.hud(); setState(star, 'over', overMsg(star, 'SCORE', 5)); }
   };
   star.update = (dt) => {
@@ -467,7 +491,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
       f.x = Math.max(5 * U, Math.min(w - 5 * U, f.bx + Math.sin(f.t * 2 + f.ph) * f.amp));
       if (f.y > h + 8 * U) f.dead = 1;
       if (!f.rock && star.sector >= 2 && f.y > 0 && Math.random() < dt * (0.12 + star.sector * 0.04)) {
-        star.shots.push({x: f.x, y: f.y + 3 * U}); sfx(500, 0.06, 250, 'square', 0.025);
+        star.shots.push({x: f.x, y: f.y + 3 * U}); sfx(500, 0.06, 250, 'square', 0.016);
       }
     });
     star.bullets.forEach(b => {
@@ -477,8 +501,8 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
         const fw = (f.rock ? 5 : 8) * U, fh = (f.rock ? 5 : 6) * U;
         if (overlap(b.x, b.y, U, 3 * U, f.x, f.y, fw, fh)) {
           b.dead = 1; f.hp--; f.flash = 0.08;
-          if (f.hp <= 0) { f.dead = 1; star.boom(f.x, f.y); star.score += f.rock ? 150 : 100; sfx(180, 0.2, 60, 'sawtooth', 0.05); }
-          else { star.score += 10; sfx(320, 0.05); }
+          if (f.hp <= 0) { f.dead = 1; star.boom(f.x, f.y); star.score += f.rock ? 150 : 100; noise(0.25, 0.06, 2400, 0, 200); sfx(300, 0.12, 80, 'square', 0.022); }
+          else { star.score += 10; sfx(320, 0.04, 0, 'square', 0.025); }
           break;
         }
       }
@@ -497,7 +521,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     star.parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt; if (p.t <= 0) p.dead = 1; });
     ['bullets', 'shots', 'foes', 'parts'].forEach(key => { star[key] = star[key].filter(o => !o.dead); });
     const sec = 1 + Math.floor(star.score / 2000);
-    if (sec !== star.sector) { star.sector = sec; star.banner = 1.6; sfx(660, 0.35, 1320, 'triangle'); }
+    if (sec !== star.sector) { star.sector = sec; star.banner = 1.6; tune([523, 659, 784, 1046, 1319], 0.07, 'square', 0.035); }
     star.hud();
   };
   star.draw = (t) => {
@@ -572,22 +596,22 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     const m = SHAPES[t];
     brick.cur = {t, m, x: Math.floor((COLS - m[0].length) / 2), y: 0};
     brick.lockT = 0; brick.dropT = 0;
-    if (brick.collide(m, brick.cur.x, brick.cur.y)) { brick.hud(); setState(brick, 'over', overMsg(brick, 'SCORE', 6)); sfx(200, 0.6, 50, 'sawtooth', 0.06); }
+    if (brick.collide(m, brick.cur.x, brick.cur.y)) { brick.hud(); setState(brick, 'over', overMsg(brick, 'SCORE', 6)); }
   };
   brick.reset = () => {
     Object.assign(brick, {grid: Array.from({length: ROWS}, () => Array(COLS).fill(0)), bag: [], score: 0, lines: 0, level: 1,
       clearing: null, das: {left: 0, right: 0}, rep: {left: 0, right: 0}});
     brick.next = brick.take(); brick.spawn(); brick.hud();
   };
-  brick.start = () => { brick.reset(); setState(brick, 'play'); sfx(523, 0.12); setTimeout(() => sfx(784, 0.18), 110); };
+  brick.start = () => { brick.reset(); setState(brick, 'play'); tune([523, 659, 784], 0.08, 'square', 0.035); };
   brick.move = (dx) => {
     const c = brick.cur;
-    if (!brick.collide(c.m, c.x + dx, c.y)) { c.x += dx; brick.lockT = 0; sfx(700, 0.025, 0, 'square', 0.02); }
+    if (!brick.collide(c.m, c.x + dx, c.y)) { c.x += dx; brick.lockT = 0; sfx(660, 0.018, 0, 'square', 0.014); }
   };
   brick.turn = () => {
     const c = brick.cur, m = rotate(c.m);
     for (const kick of [0, -1, 1, -2, 2]) {
-      if (!brick.collide(m, c.x + kick, c.y)) { c.m = m; c.x += kick; brick.lockT = 0; sfx(900, 0.04, 0, 'square', 0.03); return; }
+      if (!brick.collide(m, c.x + kick, c.y)) { c.m = m; c.x += kick; brick.lockT = 0; sfx(988, 0.03, 1318, 'square', 0.02); return; }
     }
   };
   brick.ghostY = () => { const c = brick.cur; let y = c.y; while (!brick.collide(c.m, c.x, y + 1)) y++; return y; };
@@ -596,8 +620,9 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     c.m.forEach((r, ry) => r.forEach((v, rx) => { if (v && c.y + ry >= 0) brick.grid[c.y + ry][c.x + rx] = SHADE[c.t]; }));
     const full = [];
     brick.grid.forEach((r, i) => { if (r.every(Boolean)) full.push(i); });
-    if (full.length) { brick.clearing = {rows: full, t: 0.3}; brick.cur = null; sfx(660, 0.25, 1320, 'triangle', 0.05); }
-    else { sfx(120, 0.06, 0, 'square', 0.04); brick.spawn(); }
+    if (full.length) { brick.clearing = {rows: full, t: 0.3}; brick.cur = null;
+      tune(full.length >= 4 ? [523, 659, 784, 1046, 784, 1046, 1319] : [523, 659, 784, 1046].slice(0, full.length + 1), 0.06, 'square', 0.035); }
+    else { sfx(130, 0.05, 90, 'triangle', 0.05); noise(0.04, 0.02, 800); brick.spawn(); }
   };
   brick.press = (k) => {
     if (!brick.cur) return;
@@ -606,7 +631,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     if (k === 'up' || k === 'a') brick.turn();
     if (k === 'down') brick.dropT = 1;
     if (k === 'b') {
-      const y = brick.ghostY(); brick.score += (y - brick.cur.y) * 2; brick.cur.y = y; brick.place(); brick.hud();
+      const y = brick.ghostY(); noise(0.1, 0.035, 3000, 0, 300); brick.score += (y - brick.cur.y) * 2; brick.cur.y = y; brick.place(); brick.hud();
     }
   };
   brick.update = (dt) => {
@@ -618,7 +643,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
       while (brick.grid.length < ROWS) brick.grid.unshift(Array(COLS).fill(0));
       brick.score += POINTS[n] * brick.level; brick.lines += n;
       const lv = 1 + Math.floor(brick.lines / 10);
-      if (lv !== brick.level) { brick.level = lv; sfx(880, 0.3, 1760, 'triangle'); }
+      if (lv !== brick.level) { brick.level = lv; tune([784, 988, 1175, 1568], 0.07, 'triangle', 0.045); }
       brick.clearing = null; brick.spawn(); brick.hud();
       return;
     }
@@ -761,7 +786,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   padel.start = () => {
     padel.reset(); setState(padel, 'play');
     padel.banner = {msg: 'YOUR SERVE', sub: 'PRESS A', t: 2};
-    sfx(523, 0.1); setTimeout(() => sfx(659, 0.1), 100); setTimeout(() => sfx(784, 0.2), 200);
+    tune([523, 659, 784, 1046], 0.08, 'triangle', 0.045);
   };
   const openX = (players) => {
     let bestX = 0, bestD = -1;
@@ -797,7 +822,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     if (padel.phase === 'serve') padel.banner = null;
     padel.last = who; padel.bounces = 0; padel.phase = 'rally';
     if (hitter) hitter.anim = 0.3;
-    sfx(kind === 'smash' ? 260 : 560, 0.07, kind === 'smash' ? 120 : 0, 'square', 0.05);
+    sfx(kind === 'smash' ? 520 : 820, 0.05, kind === 'smash' ? 200 : 410, 'triangle', 0.07); noise(0.03, kind === 'smash' ? 0.05 : 0.03, 4000);
   };
   padel.point = (winner, why) => {
     if (padel.phase !== 'rally') return;
@@ -813,23 +838,25 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
       if (padel.games[winner] >= 3) padel.matchOver = winner;
     }
     padel.banner = {msg, sub: why, t: 1.5};
-    sfx(winner === 'p' ? 880 : 300, 0.28, winner === 'p' ? 1320 : 110, 'triangle', 0.05);
+    const gameWon = msg.startsWith('GAME');
+    if (winner === 'p') tune(gameWon ? [523, 659, 784, 1046] : [784, 1046], 0.08, 'square', 0.035);
+    else tune(gameWon ? [392, 370, 349, 330] : [392, 330], 0.1, 'triangle', 0.045);
     padel.hud();
   };
   padel.event = (e) => {
     if (padel.phase !== 'rally') return;
     const b = padel.ball, side = b.z < 10 ? 'p' : 'c', hitter = padel.last, recv = hitter === 'p' ? 'c' : 'p';
-    if (e === 'net') { padel.point(recv, 'NET'); return; }
+    if (e === 'net') { noise(0.12, 0.04, 600); padel.point(recv, 'NET'); return; }
     if (e === 'out') { padel.point(padel.bounces ? hitter : recv, padel.bounces ? 'WINNER' : 'OUT'); return; }
     if (e === 'floor') {
       if (side === hitter) { padel.point(padel.bounces ? hitter : recv, padel.bounces ? 'WINNER' : 'NET'); return; }
-      padel.bounces++; sfx(150, 0.03, 0, 'square', 0.03);
+      padel.bounces++; sfx(220, 0.03, 140, 'triangle', 0.035);
       if (padel.bounces >= 2) padel.point(hitter, 'DOUBLE BOUNCE');
       return;
     }
     if (e === 'wall') {
       if (!padel.bounces && side === recv) padel.point(recv, 'OUT · GLASS');
-      else sfx(240, 0.04, 0, 'triangle', 0.04);
+      else { sfx(2093, 0.06, 1760, 'sine', 0.03); sfx(2637, 0.05, 0, 'sine', 0.015, 0.01); }
     }
   };
   const canHit = (p, who) => {
@@ -853,7 +880,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   padel.press = (k) => {
     if (k !== 'a' && k !== 'b') return;
     if (padel.phase === 'serve' && padel.server === 'p') { padel.shoot('p', 'drive', padel.me); return; }
-    if (padel.phase === 'rally') { padel.me.swing = 0.3; padel.me.kind = k === 'b' ? 'lob' : 'drive'; sfx(1000, 0.05, 400, 'triangle', 0.02); }
+    if (padel.phase === 'rally') { padel.me.swing = 0.3; padel.me.kind = k === 'b' ? 'lob' : 'drive'; noise(0.08, 0.015, 1500, 0, 5000); }
   };
   padel.update = (dt) => {
     if (padel.k.w !== padel.C.w || padel.k.h !== padel.C.h) padel.cam();
@@ -916,7 +943,6 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
           try { localStorage.setItem('mobgame-best', JSON.stringify(best)); } catch (e) {}
           setState(padel, 'over', '<b>' + (win ? 'YOU WIN!' : 'CPU WINS') + '</b>GAMES ' + padel.games.p + ' - ' + padel.games.c +
             '<br>MATCHES WON ' + (best.padelWins || 0) + '<i>START · PLAY AGAIN<br>B · MENU</i>');
-          sfx(win ? 523 : 200, 0.5, win ? 1046 : 60, 'triangle', 0.06);
         } else padel.setupServe();
       }
     }
@@ -1011,28 +1037,27 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     document.getElementById('lblB').textContent = LABELS[v][1];
     if (games[v]) { setState(games[v], 'title'); games[v].k.fit(); }
   };
-  gameBtns.forEach((g, i) => g.addEventListener('click', () => { select(i); beep('start'); setView(g.dataset.game); }));
+  gameBtns.forEach((g, i) => g.addEventListener('click', () => { select(i); tune([659, 880], 0.06, 'square', 0.03); setView(g.dataset.game); }));
   brick.lines = 0; brick.level = 1; brick.hud();
   setView('menu');
 
   const press = (k) => {
     held.add(k);
+    ui(k);
     const v = screen.dataset.view, G = games[v];
     if (!G) {
-      beep(k);
+      if (k === 'a' || k === 'start') { tune([659, 880], 0.06, 'square', 0.03); setView(gameBtns[sel].dataset.game); }
       if (k === 'up') select(sel - 1);
       if (k === 'down') select(sel + 1);
-      if (k === 'a' || k === 'start') setView(gameBtns[sel].dataset.game);
       return;
     }
     if (G.state === 'play') {
-      if (k === 'start') { setState(G, 'pause'); sfx(440, 0.08); return; }
+      if (k === 'start') { setState(G, 'pause'); tune([784, 523], 0.07, 'triangle', 0.04); return; }
       G.press(k);
       return;
     }
     if (G.state === 'over' && performance.now() - G.overAt < 900) return;
-    beep(k);
-    if (G.state === 'pause' && k === 'start') { setState(G, 'play'); return; }
+    if (G.state === 'pause' && k === 'start') { tune([523, 784], 0.07, 'triangle', 0.04); setState(G, 'play'); return; }
     if ((G.state === 'title' || G.state === 'over') && (k === 'start' || k === 'a')) { G.start(); return; }
     if (k === 'b') setView('menu');
   };
@@ -1081,7 +1106,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   addEventListener('keydown', e => {
     const k = keys[e.key];
     if (!k) return;
-    if (e.key === 'Enter' && e.target.closest && e.target.closest('button')) return;
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.game')) return;
     e.preventDefault();
     const b = btn(k);
     if (!b.classList.contains('on')) { down(b); press(k); }

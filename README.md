@@ -25,7 +25,7 @@ In every game, Start pauses. From the title, pause or game-over screen, B goes b
 | X | B |
 | Enter | Start |
 
-The buttons can also be clicked or tapped. **SOUND OFF / ON** toggles the 8-bit sound effects.
+The buttons can also be clicked or tapped. **SOUND OFF / ON** toggles all sound: soft retro clicks on the D-pad, A, B and Start, plus 8-bit effects and jingles in every game. With SOUND OFF everything is silent.
 
 ## Run it
 
