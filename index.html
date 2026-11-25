@@ -2,7 +2,8 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e3e3df">
 <title>MOBGAME Handheld</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,6 +82,37 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .grille{display:flex;gap:6px}
 .grille i{width:4px;height:24px;border-radius:99px;background:#b4b7ae;transform:skewX(-20deg) scaleY(.94);box-shadow:1px 0 0 #fff,inset 0 1px 2px rgba(0,0,0,.2)}
 .footer{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 20px;padding-top:16px;color:#64685f;text-align:center}
+/* Phone: the handheld fills the whole screen, edge to edge */
+@media (max-width:600px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
+  .app{height:100dvh;min-height:0;padding:0;display:block}
+  .footer,.brand i{display:none}
+  .fit{position:fixed;inset:0;width:auto;height:auto;margin:0}
+  .console{position:absolute;left:5px;right:5px;top:5px;bottom:calc(5px + env(safe-area-inset-bottom,0px));width:auto;transform:none;
+    display:flex;flex-direction:column;border-radius:52px;padding:max(16px,calc(env(safe-area-inset-top,0px) - 10px)) 14px 16px}
+  .brand{height:auto;justify-content:center;padding:0 0 12px;letter-spacing:4px}
+  .bezel{flex:1;display:flex;flex-direction:column;padding:12px;border-radius:26px}
+  .bez-row{font-size:11px;letter-spacing:1.8px}
+  .screen{flex:1;height:auto;--k:1;background:var(--lcd) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='130' shape-rendering='crispEdges'%3E%3Cg fill='%23707a52'%3E%3Crect x='22' y='18' width='3' height='3'/%3E%3Crect x='96' y='44' width='1.6' height='1.6'/%3E%3Crect x='58' y='86' width='1.6' height='1.6'/%3E%3Crect x='128' y='104' width='3' height='3'/%3E%3Crect x='8' y='112' width='1.6' height='1.6'/%3E%3C/g%3E%3C/svg%3E") 0 0/150px 130px repeat}
+  .scene{top:auto;bottom:0;width:calc(626px*var(--k));height:calc(457.625px*var(--k))}
+  .hud{left:14px;right:14px;top:12px;font-size:11px}
+  .foot-scr{top:auto;bottom:10px;left:12px;right:12px;font-size:11px}
+  .title{top:calc((100% - 457.625px*var(--k))*.5 + 96px*var(--k));font-size:calc(12px*var(--k));line-height:1.35}
+  .tag{letter-spacing:.24em}
+  h1{height:auto;padding:6px 0 2px;font-size:calc(64.8px*var(--k));line-height:.92}
+  .press{padding-top:16px;letter-spacing:.2em}
+  .slogan{padding-top:9px;font-size:11px}
+  .meta{height:auto;padding:12px 6px 0;font-size:11px}
+  .controls{height:auto;padding:26px 10px 10px}
+  .base{margin-top:18px;padding-top:14px;gap:8px}
+  .base p{font-size:10px;letter-spacing:.3px;white-space:nowrap}
+  .pills{gap:8px}
+  .pill{min-height:40px;font-size:11px;gap:6px}
+  .pill svg{width:16px;height:16px}
+  .sound{padding:0 11px;letter-spacing:.8px}.start{padding:0 15px;letter-spacing:1.2px}
+  .grille{gap:4px}.grille i{width:3px;height:20px}.grille i:nth-child(n+6){display:none}
+}
+@media (max-width:390px){.base p{display:none}.controls{padding-inline:2px}}
 @media (prefers-reduced-motion:reduce){.press,.flash{animation:none}}
 </style>
 </head>
@@ -158,7 +190,15 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 <script>
 {
   const fit = document.getElementById('fit');
+  const phone = matchMedia('(max-width:600px)');
+  const scr = document.getElementById('screen');
   const scale = () => {
+    if (phone.matches) {
+      document.documentElement.style.setProperty('--s', '1');
+      scr.style.setProperty('--k', (scr.clientWidth / 504).toFixed(4));
+      return;
+    }
+    scr.style.removeProperty('--k');
     const foot = document.querySelector('.footer').offsetHeight;
     const availH = innerHeight - foot - 78;
     const availW = document.querySelector('.app').clientWidth - 32;
@@ -170,6 +210,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   };
   const ro = new ResizeObserver(scale);
   ro.observe(document.body);
+  ro.observe(scr);
   addEventListener('resize', scale);
   scale();
 
