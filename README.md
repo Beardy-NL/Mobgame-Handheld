@@ -6,23 +6,24 @@ The console sits in the middle of the screen and scales to fit any window, from 
 
 ## Games
 
-The handheld starts on a menu with the dot-matrix MOBGAME logo. Pick a game with ↑ ↓ and press A or Start; press B to go back to the menu.
+The handheld starts on a menu with the dot-matrix MOBGAME logo. Pick a game with ↑ ↓ and press A or Start.
 
-- **Star Drifter** — a little space, a big adventure
-- **Brick** — break them all
+**Star Drifter** — a vertical space shooter. Fly with the D-pad, shoot with A (hold for auto-fire) and dash sideways with B; a dash makes you briefly untouchable. Every 2,000 points takes you to a new sector, where enemies get faster and start firing back. You have 3 lives.
 
-More games will follow.
+**Brick** — a falling-blocks puzzle. Move with ← →, turn with ↑ or A, soft-drop with ↓ and hard-drop with B. Full lines disappear; every 10 lines raises the level and the speed.
+
+In every game, Start pauses. From the title, pause or game-over screen, B goes back to the menu. Best scores are kept in your browser.
 
 ## Controls
 
 | Key | Button |
 | --- | --- |
-| ↑ ↓ ← → | D-pad (move) |
-| Space | A (shoot) |
-| X | B (dash) |
+| ↑ ↓ ← → | D-pad |
+| Space | A |
+| X | B |
 | Enter | Start |
 
-The buttons can also be clicked or tapped. **SOUND OFF / ON** toggles short 8-bit beeps.
+The buttons can also be clicked or tapped. **SOUND OFF / ON** toggles the 8-bit sound effects.
 
 ## Run it
 
@@ -42,7 +43,6 @@ python3 src/build.py
 
 ## Roadmap
 
-- Make *Star Drifter* playable: movement, shooting, enemies, score and lives
-- Make *Brick* playable: paddle, ball, bricks, score and levels
+- More games
 
 © BEARDY-NL
