@@ -165,9 +165,9 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
           <div class="logo" id="logo" role="img" aria-label="MOBGAME"></div>
           <div class="copy">© BEARDY-NL</div>
           <ul class="games" aria-label="Choose a game">
-            <li><button class="game sel" data-game="star">STAR DRIFTER</button></li>
+            <li><button class="game sel" data-game="padel">3D PADEL</button></li>
+            <li><button class="game" data-game="star">STAR DRIFTER</button></li>
             <li><button class="game" data-game="brick">BRICK</button></li>
-            <li><button class="game" data-game="padel">3D PADEL</button></li>
           </ul>
           <div class="soon">(more games soon available)</div>
           <div class="hint">↑ ↓ CHOOSE · A / START PLAY</div>
@@ -197,7 +197,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
         </div>
         <div class="view" id="v-padel" data-state="title">
           <canvas aria-hidden="true"></canvas>
-          <div class="hud"><span>YOU <span id="pYou">0</span></span><span>CPU <span id="pCpu">0</span></span></div>
+          <div class="hud"><span>US <span id="pYou">0</span></span><span>CPU <span id="pCpu">0</span></span></div>
           <div class="title b-title">
             <div class="tag">SMASH. VOLLEY. REPEAT.</div>
             <h1>3D PADEL</h1>
@@ -740,9 +740,14 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   };
   padel.setupServe = () => {
     const youServe = padel.server === 'p', side = (padel.pts.p + padel.pts.c) % 2 ? -1 : 1;
-    padel.me = {x: youServe ? 1.4 * side : -1.4 * side, z: youServe ? 1 : 1.4, swing: 0, anim: 0, kind: 'drive'};
-    padel.cpu = {x: youServe ? 1.4 * side : -1.4 * side, z: 18.8, swing: 0, anim: 0};
-    padel.ball = {x: 0, y: 1, z: 0, vx: 0, vy: 0, vz: 0};
+    const mk = (x, z) => ({x, z, swing: 0, anim: 0, kind: 'drive'});
+    padel.me = youServe ? mk(1.4 * side, 1) : mk(1.4 * side, 1.4);
+    padel.mate = youServe ? mk(-2.4 * side, 6.5) : mk(-2.4 * side, 4.5);
+    const c1 = mk(-1.4 * side, 18.8), c2 = mk(2.4 * side, youServe ? 15.5 : 13.5);
+    padel.foes = [c1, c2];
+    padel.cServer = c1;
+    const sv = youServe ? padel.me : padel.cServer;
+    padel.ball = {x: sv.x + 0.35, y: 1, z: sv.z + (youServe ? 0.3 : -0.3), vx: 0, vy: 0, vz: 0};
     padel.phase = 'serve'; padel.timer = 1.1; padel.bounces = 0; padel.last = padel.server;
     if (padel.pts.p === 3 && padel.pts.c === 3) padel.banner = {msg: 'GOLDEN POINT', sub: 'NEXT POINT WINS', t: 1.6};
     else if (youServe) padel.banner = {msg: 'YOUR SERVE', sub: 'PRESS A', t: 1.4};
@@ -758,20 +763,28 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     padel.banner = {msg: 'YOUR SERVE', sub: 'PRESS A', t: 2};
     sfx(523, 0.1); setTimeout(() => sfx(659, 0.1), 100); setTimeout(() => sfx(784, 0.2), 200);
   };
-  padel.shoot = (who, kind) => {
+  const openX = (players) => {
+    let bestX = 0, bestD = -1;
+    [-3.5, -2, 0, 2, 3.5].forEach(x => {
+      const d = Math.min(...players.map(p => Math.abs(p.x - x))) + Math.random() * 0.6;
+      if (d > bestD) { bestD = d; bestX = x; }
+    });
+    return bestX;
+  };
+  padel.shoot = (who, kind, hitter) => {
     const b = padel.ball;
     let tx, tz, T;
     if (who === 'p') {
-      const aim = held.has('left') ? -1 : held.has('right') ? 1 : 0;
-      tx = aim ? aim * 3.4 : -Math.sign(padel.cpu.x || Math.random() - 0.5) * 2.6 + (Math.random() - 0.5);
+      const aim = hitter === padel.me ? (held.has('left') ? -1 : held.has('right') ? 1 : 0) : 0;
+      tx = aim ? aim * 3.4 : openX(padel.foes);
       if (kind === 'lob') { tz = 18.4; T = 1.85; }
       else if (b.y > 1.9) { tz = 14.5 + Math.random() * 2; T = 0.6; kind = 'smash'; }
       else { tz = 15.5 + Math.random() * 2.5; T = 1.0; }
       padel.cpuMiss = Math.random() < (kind === 'smash' ? 0.4 : kind === 'lob' ? 0.14 : 0.12);
     } else {
-      const lob = padel.me.z > 6.5 && Math.random() < 0.55;
-      tx = (Math.random() * 2 - 1) * 3.2;
-      if (Math.abs(tx - padel.me.x) < 1.2) tx = -Math.sign(padel.me.x || 1) * 3;
+      const lob = padel.me.z > 6 && padel.mate.z > 6 && Math.random() < 0.6;
+      tx = openX([padel.me, padel.mate]);
+      padel.mateMiss = Math.random() < 0.1;
       if (lob) { tz = 1.6; T = 1.9; } else { tz = 2.2 + Math.random() * 3.5; T = Math.max(0.8, 1.05 - (padel.games.p + padel.games.c) * 0.04); }
     }
     for (let i = 0; i < 8; i++) {
@@ -783,7 +796,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     b.vx = (tx - b.x) / T; b.vz = (tz - b.z) / T; b.vy = (BR - b.y + 0.5 * GRAV * T * T) / T;
     if (padel.phase === 'serve') padel.banner = null;
     padel.last = who; padel.bounces = 0; padel.phase = 'rally';
-    (who === 'p' ? padel.me : padel.cpu).anim = 0.3;
+    if (hitter) hitter.anim = 0.3;
     sfx(kind === 'smash' ? 260 : 560, 0.07, kind === 'smash' ? 120 : 0, 'square', 0.05);
   };
   padel.point = (winner, why) => {
@@ -792,10 +805,10 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     if (winner === 'p') padel.score++;
     const s = padel.pts;
     s[winner]++;
-    let msg = winner === 'p' ? 'POINT YOU' : 'POINT CPU';
+    let msg = winner === 'p' ? 'POINT US' : 'POINT CPU';
     if (s[winner] >= 4) {
       padel.games[winner]++; s.p = 0; s.c = 0;
-      msg = winner === 'p' ? 'GAME YOU' : 'GAME CPU';
+      msg = winner === 'p' ? 'GAME US' : 'GAME CPU';
       padel.server = padel.server === 'p' ? 'c' : 'p';
       if (padel.games[winner] >= 3) padel.matchOver = winner;
     }
@@ -825,12 +838,12 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     if (who === 'p' ? b.z > 10 : b.z < 10) return false;
     return Math.hypot(b.x - p.x, b.z - p.z) < (who === "p" ? 1.5 : 1.3) && b.y < 2.7;
   };
-  padel.predict = () => {
-    const b = Object.assign({}, padel.ball);
-    let bounced = 0, lastPos = {x: b.x, z: 14};
+  padel.predict = (team) => {
+    const b = Object.assign({}, padel.ball), mine = (z) => team === 'c' ? z > 10.3 : z < 9.7;
+    let bounced = 0, lastPos = {x: b.x, z: team === 'c' ? 14 : 6};
     for (let i = 0; i < 200; i++) {
-      pstep(b, 1 / 60, e => { if (e === 'floor' && b.z > 10) bounced++; });
-      if (b.z > 10.3) {
+      pstep(b, 1 / 60, e => { if (e === 'floor' && mine(b.z)) bounced++; });
+      if (mine(b.z)) {
         lastPos = {x: b.x, z: b.z};
         if (bounced >= 1 && b.y < 1.5) return lastPos;
       }
@@ -839,22 +852,28 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   };
   padel.press = (k) => {
     if (k !== 'a' && k !== 'b') return;
-    if (padel.phase === 'serve' && padel.server === 'p') { padel.shoot('p', 'drive'); return; }
+    if (padel.phase === 'serve' && padel.server === 'p') { padel.shoot('p', 'drive', padel.me); return; }
     if (padel.phase === 'rally') { padel.me.swing = 0.3; padel.me.kind = k === 'b' ? 'lob' : 'drive'; sfx(1000, 0.05, 400, 'triangle', 0.02); }
   };
   padel.update = (dt) => {
     if (padel.k.w !== padel.C.w || padel.k.h !== padel.C.h) padel.cam();
-    const me = padel.me, cpu = padel.cpu, b = padel.ball;
+    const me = padel.me, mate = padel.mate, foes = padel.foes, b = padel.ball;
     if (padel.banner) { padel.banner.t -= dt; if (padel.banner.t <= 0) padel.banner = null; }
-    me.anim -= dt; cpu.anim -= dt;
+    [me, mate, ...foes].forEach(p => { p.anim -= dt; });
     const vx = held.has('right') - held.has('left'), vz = held.has('up') - held.has('down'), sp = 5.2;
     me.x = Math.max(-4.6, Math.min(4.6, me.x + vx * sp * dt));
     if (padel.phase !== 'serve' || padel.server !== 'p') me.z = Math.max(0.4, Math.min(9.3, me.z + vz * sp * dt));
+    const walk = (p, tx, tz, spd) => {
+      const dx = tx - p.x, dz = tz - p.z, d = Math.hypot(dx, dz);
+      if (d > 0.05) { const m = Math.min(d, spd * dt); p.x += dx / d * m; p.z += dz / d * m; }
+    };
+    const aiSpd = 4.2 + (padel.games.p + padel.games.c) * 0.15;
+    const mateHome = () => walk(mate, me.x > 0 ? -2.4 : 2.4, me.z > 5 ? 6.5 : 4.5, 4.4);
 
     if (padel.phase === 'serve') {
-      const sv = padel.server === 'p' ? me : cpu;
+      const sv = padel.server === 'p' ? me : padel.cServer;
       Object.assign(b, {x: sv.x + 0.35, y: 1 + Math.abs(Math.sin(performance.now() / 300)) * 0.15, z: sv.z + (padel.server === 'p' ? 0.3 : -0.3), vx: 0, vy: 0, vz: 0});
-      if (padel.server === 'c') { padel.timer -= dt; if (padel.timer <= 0) padel.shoot('c', 'drive'); }
+      if (padel.server === 'c') { padel.timer -= dt; if (padel.timer <= 0) padel.shoot('c', 'drive', padel.cServer); }
       return;
     }
     const steps = 3;
@@ -862,14 +881,31 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
     if (me.swing > 0) {
       me.swing -= dt; me.anim = Math.max(me.anim, 0.2);
-      if (canHit(me, 'p')) { padel.shoot('p', me.kind); me.swing = 0; }
+      if (canHit(me, 'p')) { padel.shoot('p', me.kind, me); me.swing = 0; }
     }
-    const cspd = 4.2 + (padel.games.p + padel.games.c) * 0.15;
-    let tx = 0, tz = 17;
-    if (padel.phase === 'rally' && padel.last === 'p') { const t = padel.predict(); tx = t.x; tz = Math.max(10.8, Math.min(19.6, t.z + 0.4)); }
-    const dx = tx - cpu.x, dz = tz - cpu.z, dist = Math.hypot(dx, dz);
-    if (dist > 0.05) { const m = Math.min(dist, cspd * dt); cpu.x += dx / dist * m; cpu.z += dz / dist * m; }
-    if (canHit(cpu, 'c') && !padel.cpuMiss && (padel.bounces >= 1 || cpu.z < 13.5)) padel.shoot('c', 'drive');
+    // partner: covers the half you are not on
+    if (padel.phase === 'rally' && padel.last === 'c') {
+      const t = padel.predict('p'), mySide = Math.sign(me.x || 1);
+      const mateBall = Math.sign(t.x) !== mySide || Math.hypot(t.x - me.x, t.z - me.z) > 3.2;
+      if (mateBall) walk(mate, t.x, Math.max(0.6, Math.min(9.2, t.z - 0.4)), 4.6); else mateHome();
+      if (mateBall && canHit(mate, 'p') && !padel.mateMiss && (padel.bounces >= 1 || mate.z > 6.5)) {
+        padel.shoot('p', b.y > 1.9 ? 'drive' : (Math.random() < 0.25 ? 'lob' : 'drive'), mate);
+      }
+    } else mateHome();
+    // opponents: the one closest to the ball goes for it, the other holds position
+    if (padel.phase === 'rally' && padel.last === 'p') {
+      const t = padel.predict('c'), tz = Math.max(10.8, Math.min(19.6, t.z + 0.4));
+      const [near, far] = Math.hypot(foes[0].x - t.x, foes[0].z - tz) <= Math.hypot(foes[1].x - t.x, foes[1].z - tz) ? foes : [foes[1], foes[0]];
+      walk(near, t.x, tz, aiSpd);
+      walk(far, near.x > 0 ? -2.4 : 2.4, 16, aiSpd * 0.8);
+      foes.forEach(f => {
+        if (canHit(f, 'c') && !padel.cpuMiss && (padel.bounces >= 1 || f.z < 13.5) && padel.last === 'p') padel.shoot('c', 'drive', f);
+      });
+    } else {
+      walk(foes[0], -2.4, 16.5, aiSpd * 0.8);
+      walk(foes[1], 2.4, 16.5, aiSpd * 0.8);
+    }
+    padel.mateMiss = padel.mateMiss && padel.last === 'c';
 
     if (padel.phase === 'point') {
       padel.timer -= dt;
@@ -926,8 +962,15 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     line([0, 0, 3.05], [0, 0, 16.95], INK);
     poly([[-5, 0, 0], [5, 0, 0], [5, 0, 20], [-5, 0, 20]], null, INK, 2);
     const items = [];
-    if (padel.cpu && !title) items.push({z: padel.cpu.z, d: () => figure(g, padel.cpu, MID, -1)});
-    if (padel.me && !title) items.push({z: padel.me.z, d: () => figure(g, padel.me, INK, 1)});
+    if (padel.me && !title) {
+      padel.foes.forEach(f => items.push({z: f.z, d: () => figure(g, f, MID, -1)}));
+      items.push({z: padel.mate.z, d: () => figure(g, padel.mate, INK, 1)});
+      items.push({z: padel.me.z, d: () => {
+        figure(g, padel.me, INK, 1);
+        const [fx, fy, s] = P3(padel.me.x, 0, padel.me.z), u = s / 10, ty = fy - 21 * u;
+        g.fillStyle = INK; g.beginPath(); g.moveTo(fx - 1.6 * u, ty); g.lineTo(fx + 1.6 * u, ty); g.lineTo(fx, ty + 1.8 * u); g.closePath(); g.fill();
+      }});
+    }
     items.push({z: 10, d: () => {
       poly([[-5, 0, 10], [5, 0, 10], [5, NETH, 10], [-5, NETH, 10]], 'rgba(48,60,43,.22)');
       for (let x = -4.5; x < 5; x += 0.5) line([x, 0, 10], [x, NETH, 10], 'rgba(48,60,43,.25)', 1);

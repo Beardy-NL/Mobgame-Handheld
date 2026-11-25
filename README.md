@@ -12,7 +12,7 @@ The handheld starts on a menu with the dot-matrix MOBGAME logo. Pick a game with
 
 **Brick** — a falling-blocks puzzle. Move with ← →, turn with ↑ or A, soft-drop with ↓ and hard-drop with B. Full lines disappear; every 10 lines raises the level and the speed.
 
-**3D Padel** — padel against the computer on a 3D court with glass walls. Move with the D-pad (↑ towards the net, ↓ back), press A for a drive and B for a lob. Hit the ball high and A becomes a smash. Hold ← or → while hitting to aim. The ball must bounce once on the other side before it may hit the glass; it is your point when it bounces twice there. Scoring is 0-15-30-40 with a golden point at 40-40, and the first to 3 games wins the match.
+**3D Padel** — 2 vs 2 padel on a 3D court with glass walls: you and a computer partner against two computer players. You are the player with the ▼ marker; your partner covers the other half. Move with the D-pad (↑ towards the net, ↓ back), press A for a drive and B for a lob. Hit the ball high and A becomes a smash. Hold ← or → while hitting to aim. The ball must bounce once on the other side before it may hit the glass; it is your point when it bounces twice there. Scoring is 0-15-30-40 with a golden point at 40-40, and the first to 3 games wins the match.
 
 In every game, Start pauses. From the title, pause or game-over screen, B goes back to the menu. Best scores are kept in your browser.
 
