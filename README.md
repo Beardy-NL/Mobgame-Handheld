@@ -10,7 +10,7 @@ The handheld starts on a menu with the dot-matrix MOBGAME logo. Pick a game with
 
 **Tennis** — 1 vs 1 against the computer on a 3D tennis court. Move with the D-pad, A for a drive (a smash when the ball is high), B for a lob; hold ← or → while hitting to aim. The first bounce has to land inside the singles lines. Real tennis scoring with deuce and advantage; first to 3 games wins. After every point your player has something to say about it.
 
-**Brick** — a falling-blocks puzzle. Move with ← →, turn with ↑ or A, soft-drop with ↓ and hard-drop with B. Full lines disappear; every 10 lines raises the level and the speed.
+**Basketball** — score as many points as you can in 30 seconds. A power bar runs back and forth under the ball; press A (or B) when the marker is in the dark zone to shoot it in, and dead centre for a swish. Line the ball up under the hoop with ← →. After 5 baskets the hoop starts sliding from side to side. A basket is worth 2 points, a swish 3.
 
 **3D Padel** — 2 vs 2 padel on a 3D court with glass walls: you and a computer partner against two computer players. You are the player with the ▼ marker; your partner covers the other half. Move with the D-pad (↑ towards the net, ↓ back), press A for a drive and B for a lob. Hit the ball high and A becomes a smash. Hold ← or → while hitting to aim. The ball must bounce once on the other side before it may hit the glass; it is your point when it bounces twice there. After every point one of your team speaks up in a speech bubble — a compliment (or a cheeky claim) when you win the point, a grumble when the opponents do. Scoring is 0-15-30-40 with a golden point at 40-40, and the first to 3 games wins the match.
 

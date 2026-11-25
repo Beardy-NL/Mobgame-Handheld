@@ -122,7 +122,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 @media (max-width:390px){.base p{display:none}.controls{padding-inline:2px}}
 .view{position:absolute;inset:0;display:none}
 .lcd-snd{position:absolute;left:50%;top:14px;width:18px;height:18px;margin-left:-9px;z-index:3;color:var(--lcd-ink);pointer-events:none}
-.screen[data-view=menu] #v-menu,.screen[data-view=tennis] #v-tennis,.screen[data-view=brick] #v-brick,.screen[data-view=padel] #v-padel{display:block}
+.screen[data-view=menu] #v-menu,.screen[data-view=tennis] #v-tennis,.screen[data-view=hoops] #v-hoops,.screen[data-view=padel] #v-padel{display:block}
 .screen[data-view=menu] #v-menu{display:flex}
 #v-menu{flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 20px 44px}
 .logo{width:min(80%,330px)}.logo svg{display:block;width:100%;height:auto}
@@ -167,7 +167,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
           <ul class="games" aria-label="Choose a game">
             <li><button class="game sel" data-game="padel">3D PADEL</button></li>
             <li><button class="game" data-game="tennis">TENNIS</button></li>
-            <li><button class="game" data-game="brick">BRICK</button></li>
+            <li><button class="game" data-game="hoops">BASKETBALL</button></li>
           </ul>
           <div class="soon">(more games soon available)</div>
           <div class="hint">↑ ↓ CHOOSE · A / START PLAY</div>
@@ -183,16 +183,16 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
           <div class="msg" role="status"></div>
           <div class="foot-scr"><span class="f-left">GAMES 0-0</span><span class="back">B · MENU</span><span id="tServe">SERVE · YOU</span></div>
         </div>
-        <div class="view" id="v-brick" data-state="title">
+        <div class="view" id="v-hoops" data-state="title">
           <canvas aria-hidden="true"></canvas>
-          <div class="hud"><span>SCORE <span id="bScore">000000</span></span><span>HI <span id="bBest">000000</span></span></div>
+          <div class="hud"><span>TIME <span id="hTime">30</span></span><span>SCORE <span id="hScore">00</span></span></div>
           <div class="title b-title">
-            <div class="tag">STACK. CLEAR. REPEAT.</div>
-            <h1>BRICK</h1>
+            <div class="tag">30 SECONDS. HOW MANY?</div>
+            <h1>BASKETBALL</h1>
             <div class="press">PRESS START TO PLAY</div>
           </div>
           <div class="msg" role="status"></div>
-          <div class="foot-scr"><span class="f-left">LEVEL 01</span><span class="back">B · MENU</span><span id="bLines">000 LINES</span></div>
+          <div class="foot-scr"><span class="f-left">BEST 00</span><span class="back">B · MENU</span><span id="hBaskets">0 BASKETS</span></div>
         </div>
         <div class="view" id="v-padel" data-state="title">
           <canvas aria-hidden="true"></canvas>
@@ -428,177 +428,6 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     const isBest = saveBest(G.id, G.score);
     return '<b>GAME OVER</b>' + label + ' ' + pad(G.score, digits) + '<br>' +
       (isBest ? 'NEW BEST!' : 'BEST ' + pad(best[G.id] || 0, digits)) + '<i>START · PLAY AGAIN<br>B · MENU</i>';
-  };
-
-  // ---------- BRICK (falling blocks) ----------
-  const SHAPES = {
-    I: [[1, 1, 1, 1]], O: [[1, 1], [1, 1]], T: [[0, 1, 0], [1, 1, 1]],
-    S: [[0, 1, 1], [1, 1, 0]], Z: [[1, 1, 0], [0, 1, 1]], J: [[1, 0, 0], [1, 1, 1]], L: [[0, 0, 1], [1, 1, 1]]
-  };
-  const SHADE = {I: 1, O: 2, T: 1, S: 2, Z: 1, J: 2, L: 1};
-  const COLS = 10, ROWS = 18, POINTS = [0, 100, 300, 500, 800];
-  const rotate = m => m[0].map((_, i) => m.map(r => r[i]).reverse());
-  const DEMO = ['..........', '..........', '1.......22', '11.2...122', '1122.21122', '2112221.11'];
-  const brick = {id: 'brick', k: kit('v-brick'), state: 'title', score: 0};
-  const bScore = document.getElementById('bScore'), bBest = document.getElementById('bBest'),
-    bLines = document.getElementById('bLines'), bLevel = brick.k.view.querySelector('.f-left');
-  brick.hud = () => {
-    bScore.textContent = pad(brick.score, 6);
-    bBest.textContent = pad(Math.max(best.brick || 0, brick.score), 6);
-    bLines.textContent = pad(brick.lines || 0, 3) + ' LINES';
-    bLevel.textContent = 'LEVEL ' + pad(brick.level || 1, 2);
-  };
-  brick.take = () => {
-    if (!brick.bag.length) {
-      brick.bag = Object.keys(SHAPES);
-      for (let i = brick.bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [brick.bag[i], brick.bag[j]] = [brick.bag[j], brick.bag[i]]; }
-    }
-    return brick.bag.pop();
-  };
-  brick.collide = (m, x, y) => {
-    for (let r = 0; r < m.length; r++) for (let c = 0; c < m[r].length; c++) {
-      if (!m[r][c]) continue;
-      const gx = x + c, gy = y + r;
-      if (gx < 0 || gx >= COLS || gy >= ROWS) return true;
-      if (gy >= 0 && brick.grid[gy][gx]) return true;
-    }
-    return false;
-  };
-  brick.spawn = () => {
-    const t = brick.next; brick.next = brick.take();
-    const m = SHAPES[t];
-    brick.cur = {t, m, x: Math.floor((COLS - m[0].length) / 2), y: 0};
-    brick.lockT = 0; brick.dropT = 0;
-    if (brick.collide(m, brick.cur.x, brick.cur.y)) { brick.hud(); setState(brick, 'over', overMsg(brick, 'SCORE', 6)); }
-  };
-  brick.reset = () => {
-    Object.assign(brick, {grid: Array.from({length: ROWS}, () => Array(COLS).fill(0)), bag: [], score: 0, lines: 0, level: 1,
-      clearing: null, das: {left: 0, right: 0}, rep: {left: 0, right: 0}});
-    brick.next = brick.take(); brick.spawn(); brick.hud();
-  };
-  brick.start = () => { brick.reset(); setState(brick, 'play'); tune([523, 659, 784], 0.08, 'square', 0.035); };
-  brick.move = (dx) => {
-    const c = brick.cur;
-    if (!brick.collide(c.m, c.x + dx, c.y)) { c.x += dx; brick.lockT = 0; sfx(660, 0.018, 0, 'square', 0.014); }
-  };
-  brick.turn = () => {
-    const c = brick.cur, m = rotate(c.m);
-    for (const kick of [0, -1, 1, -2, 2]) {
-      if (!brick.collide(m, c.x + kick, c.y)) { c.m = m; c.x += kick; brick.lockT = 0; sfx(988, 0.03, 1318, 'square', 0.02); return; }
-    }
-  };
-  brick.ghostY = () => { const c = brick.cur; let y = c.y; while (!brick.collide(c.m, c.x, y + 1)) y++; return y; };
-  brick.place = () => {
-    const c = brick.cur;
-    c.m.forEach((r, ry) => r.forEach((v, rx) => { if (v && c.y + ry >= 0) brick.grid[c.y + ry][c.x + rx] = SHADE[c.t]; }));
-    const full = [];
-    brick.grid.forEach((r, i) => { if (r.every(Boolean)) full.push(i); });
-    if (full.length) { brick.clearing = {rows: full, t: 0.3}; brick.cur = null;
-      tune(full.length >= 4 ? [523, 659, 784, 1046, 784, 1046, 1319] : [523, 659, 784, 1046].slice(0, full.length + 1), 0.06, 'square', 0.035); }
-    else { sfx(130, 0.05, 90, 'triangle', 0.05); noise(0.04, 0.02, 800); brick.spawn(); }
-  };
-  brick.press = (k) => {
-    if (!brick.cur) return;
-    if (k === 'left') brick.move(-1);
-    if (k === 'right') brick.move(1);
-    if (k === 'up' || k === 'a') brick.turn();
-    if (k === 'down') brick.dropT = 1;
-    if (k === 'b') {
-      const y = brick.ghostY(); noise(0.1, 0.035, 3000, 0, 300); brick.score += (y - brick.cur.y) * 2; brick.cur.y = y; brick.place(); brick.hud();
-    }
-  };
-  brick.update = (dt) => {
-    if (brick.clearing) {
-      brick.clearing.t -= dt;
-      if (brick.clearing.t > 0) return;
-      const n = brick.clearing.rows.length;
-      brick.grid = brick.grid.filter((_, i) => !brick.clearing.rows.includes(i));
-      while (brick.grid.length < ROWS) brick.grid.unshift(Array(COLS).fill(0));
-      brick.score += POINTS[n] * brick.level; brick.lines += n;
-      const lv = 1 + Math.floor(brick.lines / 10);
-      if (lv !== brick.level) { brick.level = lv; tune([784, 988, 1175, 1568], 0.07, 'triangle', 0.045); }
-      brick.clearing = null; brick.spawn(); brick.hud();
-      return;
-    }
-    if (!brick.cur) return;
-    ['left', 'right'].forEach(d => {
-      if (!held.has(d)) { brick.das[d] = 0; brick.rep[d] = 0; return; }
-      brick.das[d] += dt;
-      if (brick.das[d] < 0.17) return;
-      brick.rep[d] += dt;
-      while (brick.rep[d] >= 0.05) { brick.rep[d] -= 0.05; brick.move(d === 'left' ? -1 : 1); }
-    });
-    const c = brick.cur, soft = held.has('down');
-    const interval = soft ? 0.04 : Math.max(0.07, 0.8 - (brick.level - 1) * 0.07);
-    if (brick.collide(c.m, c.x, c.y + 1)) {
-      brick.lockT += dt;
-      if (brick.lockT >= (soft ? 0.12 : 0.45)) { brick.place(); brick.hud(); }
-      return;
-    }
-    brick.dropT += dt;
-    if (brick.dropT >= interval) { brick.dropT = 0; c.y++; if (soft) { brick.score += 1; brick.hud(); } }
-  };
-  brick.layout = () => {
-    const {w, h} = brick.k, top = 36, bottom = 32;
-    const panel = Math.max(70, Math.min(110, Math.round(w * 0.24)));
-    const cell = Math.max(8, Math.floor(Math.min((h - top - bottom) / ROWS, (w - panel - 40) / COLS)));
-    const bw = cell * COLS, bh = cell * ROWS, gap = 14;
-    const bx = Math.round((w - bw - gap - panel) / 2), by = Math.round(top + (h - top - bottom - bh) / 2);
-    return {cell, bx, by, bw, bh, px: bx + bw + gap, panel};
-  };
-  const block = (g, x, y, s, shade) => {
-    g.fillStyle = shade === 2 ? MID : INK;
-    g.fillRect(x + 1, y + 1, s - 2, s - 2);
-    g.fillStyle = 'rgba(165,170,123,.55)';
-    const i = Math.max(2, Math.round(s * 0.3));
-    g.fillRect(x + i, y + i, s - 2 * i, s - 2 * i);
-  };
-  brick.draw = (t) => {
-    const {g, w, h} = brick.k;
-    g.clearRect(0, 0, w, h);
-    const L = brick.layout(), s = L.cell;
-    g.globalAlpha = brick.state === 'title' ? 0.32 : 1;
-    g.fillStyle = 'rgba(48,60,43,.07)'; g.fillRect(L.bx, L.by, L.bw, L.bh);
-    g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(L.bx - 3, L.by - 3, L.bw + 6, L.bh + 6);
-    g.fillStyle = 'rgba(48,60,43,.18)';
-    for (let r = 1; r < ROWS; r++) for (let c = 1; c < COLS; c++) g.fillRect(L.bx + c * s - 1, L.by + r * s - 1, 2, 2);
-    if (brick.state === 'title') {
-      DEMO.forEach((row, i) => [...row].forEach((v, c) => { if (v !== '.') block(g, L.bx + c * s, L.by + (ROWS - DEMO.length + i) * s, s, +v); }));
-      const fy = Math.floor((t * 2) % (ROWS - 5)) - 1;
-      SHAPES.T.forEach((r, ry) => r.forEach((v, rx) => { if (v && fy + ry >= 0) block(g, L.bx + (4 + rx) * s, L.by + (fy + ry) * s, s, 1); }));
-      g.globalAlpha = 1;
-      return;
-    }
-    const flashOn = brick.clearing && Math.floor(t * 20) % 2;
-    brick.grid.forEach((row, r) => row.forEach((v, c) => {
-      if (!v) return;
-      if (brick.clearing && brick.clearing.rows.includes(r) && flashOn) return;
-      block(g, L.bx + c * s, L.by + r * s, s, v);
-    }));
-    const cur = brick.cur;
-    if (cur && brick.state !== 'over') {
-      const gy = brick.ghostY();
-      g.strokeStyle = 'rgba(48,60,43,.4)'; g.lineWidth = 1;
-      cur.m.forEach((r, ry) => r.forEach((v, rx) => { if (v && gy + ry >= 0) g.strokeRect(L.bx + (cur.x + rx) * s + 1.5, L.by + (gy + ry) * s + 1.5, s - 3, s - 3); }));
-      cur.m.forEach((r, ry) => r.forEach((v, rx) => { if (v && cur.y + ry >= 0) block(g, L.bx + (cur.x + rx) * s, L.by + (cur.y + ry) * s, s, SHADE[cur.t]); }));
-    }
-    const fs = Math.max(10, Math.min(12, Math.round(L.panel / 8)));
-    text(g, 'NEXT', L.px + L.panel / 2, L.by + 8, fs);
-    const box = Math.round(L.panel * 0.86), bxx = Math.round(L.px + (L.panel - box) / 2), byy = L.by + 20;
-    g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(bxx, byy, box, Math.round(box * 0.72));
-    if (brick.next) {
-      const m = SHAPES[brick.next], ns = Math.floor(Math.min(s, box / 5));
-      const ox = Math.round(bxx + (box - m[0].length * ns) / 2), oy = Math.round(byy + (box * 0.72 - m.length * ns) / 2);
-      m.forEach((r, ry) => r.forEach((v, rx) => { if (v) block(g, ox + rx * ns, oy + ry * ns, ns, SHADE[brick.next]); }));
-    }
-    const ly = byy + Math.round(box * 0.72) + 26;
-    text(g, 'LEVEL', L.px + L.panel / 2, ly, fs);
-    text(g, pad(brick.level, 2), L.px + L.panel / 2, ly + 22, fs + 8);
-    text(g, 'LINES', L.px + L.panel / 2, ly + 54, fs);
-    text(g, pad(brick.lines, 3), L.px + L.panel / 2, ly + 76, fs + 8);
-    if (L.by + L.bh - (ly + 120) > 40) {
-      ['← → MOVE', '↑ / A TURN', '↓ SOFT', 'B DROP'].forEach((l, i) => text(g, l, L.px + L.panel / 2, ly + 120 + i * 16, fs - 1, 'center', MID));
-    }
   };
 
   // ---------- 3D PADEL ----------
@@ -1206,13 +1035,204 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     }
   };
 
+  // ---------- BASKETBALL (30 seconds) ----------
+  const hoops = {id: 'hoops', k: kit('v-hoops'), state: 'title', score: 0, pops: [], meter: 0, moveT: 0, baskets: 0, wait: 0};
+  const hTime = document.getElementById('hTime'), hScore = document.getElementById('hScore'),
+    hBest = hoops.k.view.querySelector('.f-left'), hBaskets = document.getElementById('hBaskets');
+  const ZONE = {lo: 0.6, hi: 0.78, mid: 0.69};
+  hoops.geo = () => {
+    const {w, h} = hoops.k, bw = Math.min(170, w * 0.36), bh = bw * 0.6, boardY = 52;
+    const rimW = bw * 0.44, rimY = boardY + bh * 0.8, r = Math.max(13, Math.min(24, w * 0.05));
+    return {w, h, bw, bh, boardY, rimW, rimY, r, ballY: h - 96, meterY: h - 54};
+  };
+  hoops.hoopAt = (time) => {
+    const G = hoops.geo();
+    if (!hoops.moveT) return G.w / 2;
+    const amp = Math.min(1, hoops.moveT / 2) * (G.w / 2 - G.bw / 2 - 10) * 0.85;
+    return G.w / 2 + Math.sin(hoops.phase + (time || 0) * hoops.speed) * amp;
+  };
+  hoops.hud = () => {
+    hTime.textContent = String(Math.max(0, Math.ceil(hoops.time === undefined ? 30 : hoops.time))).padStart(2, '0');
+    hScore.textContent = pad(hoops.score, 2);
+    hBest.textContent = 'BEST ' + pad(best.hoops || 0, 2);
+    hBaskets.textContent = (hoops.baskets || 0) + (hoops.baskets === 1 ? ' BASKET' : ' BASKETS');
+  };
+  hoops.reset = () => {
+    hoops.k.fit();
+    Object.assign(hoops, {score: 0, baskets: 0, time: 30, meter: 0, dir: 1, shot: null, pops: [], moveT: 0, phase: 0,
+      speed: 0.7, lastSec: 30, x: hoops.k.w / 2, wait: 0, ended: false});
+    hoops.hud();
+  };
+  hoops.start = () => { hoops.reset(); setState(hoops, 'play'); tune([523, 659, 784, 1046], 0.08, 'square', 0.035); };
+  hoops.pop = (txt) => { const G = hoops.geo(); hoops.pops.push({txt, x: hoops.hoopAt(0), y: G.rimY - 34, t: 1}); };
+  hoops.shoot = () => {
+    if (hoops.shot || hoops.wait > 0 || hoops.time <= 0) return;
+    const G = hoops.geo(), p = hoops.meter, dur = 0.85;
+    const hx = hoops.hoopAt(dur), dx = hoops.x - hx, half = G.rimW / 2;
+    let result;
+    if (p >= ZONE.lo && p <= ZONE.hi) {
+      if (Math.abs(dx) < half * 0.8) result = Math.abs(p - ZONE.mid) < 0.025 && Math.abs(dx) < half * 0.35 ? 'swish' : 'in';
+      else if (Math.abs(dx) < half * 1.5) result = 'rim';
+      else result = 'air';
+    } else if (Math.abs(dx) > half * 1.5) result = 'air';
+    else result = p < ZONE.lo ? 'short' : 'long';
+    hoops.shot = {x0: hoops.x, y0: G.ballY, t: 0, dur, result, p, dx, side: Math.sign(dx) || 1};
+    sfx(300, 0.12, 700, 'triangle', 0.04); noise(0.12, 0.02, 1200, 0, 4000);
+  };
+  hoops.press = (k) => { if (k === 'a' || k === 'b') hoops.shoot(); };
+  hoops.finishShot = () => {
+    const s = hoops.shot;
+    if (s.result === 'in' || s.result === 'swish') {
+      const pts = s.result === 'swish' ? 3 : 2;
+      hoops.score += pts; hoops.baskets++;
+      hoops.pop(s.result === 'swish' ? 'SWISH +3' : '+2');
+      if (s.result === 'swish') tune([784, 1046, 1319], 0.06, 'square', 0.035); else tune([659, 880], 0.06, 'square', 0.035);
+      if (hoops.baskets === 5) hoops.pop('HOOP ON THE MOVE!');
+      if (hoops.baskets >= 5) hoops.speed = Math.min(1.7, 0.7 + (hoops.baskets - 5) * 0.07);
+    } else hoops.pop({short: 'SHORT', long: 'TOO LONG', rim: 'RIM!', air: 'AIRBALL'}[s.result]);
+    hoops.shot = null; hoops.wait = 0.25; hoops.hud();
+  };
+  hoops.update = (dt) => {
+    const G = hoops.geo();
+    if (hoops.time > 0) {
+      hoops.time = Math.max(0, hoops.time - dt);
+      const sec = Math.ceil(hoops.time);
+      if (sec !== hoops.lastSec) {
+        hoops.lastSec = sec; hoops.hud();
+        if (sec <= 5 && sec > 0) sfx(880, 0.06, 0, 'square', 0.03);
+      }
+    }
+    if (hoops.baskets >= 5) { hoops.moveT += dt; hoops.phase += dt * hoops.speed; }
+    hoops.meter += hoops.dir * dt * (1.15 + Math.min(0.5, hoops.baskets * 0.03));
+    if (hoops.meter >= 1) { hoops.meter = 1; hoops.dir = -1; }
+    if (hoops.meter <= 0) { hoops.meter = 0; hoops.dir = 1; }
+    if (!hoops.shot) {
+      const v = (held.has('right') - held.has('left')) * G.w * 0.6;
+      hoops.x = Math.max(G.r + 6, Math.min(G.w - G.r - 6, hoops.x + v * dt));
+      hoops.wait -= dt;
+    } else {
+      const s = hoops.shot;
+      s.t += dt;
+      if (s.t >= s.dur && !s.landed) {
+        s.landed = true;
+        if (s.result === 'in' || s.result === 'swish') noise(0.25, 0.04, 2500, 0, 600);
+        else if (s.result === 'rim') { sfx(1400, 0.08, 1100, 'square', 0.03); sfx(1900, 0.1, 0, 'triangle', 0.02); }
+        else if (s.result === 'long') { sfx(140, 0.08, 90, 'triangle', 0.06); noise(0.06, 0.03, 900); }
+      }
+      if (s.t >= s.dur + 0.55) hoops.finishShot();
+    }
+    hoops.pops.forEach(p => { p.t -= dt * 0.8; p.y -= dt * 20; });
+    hoops.pops = hoops.pops.filter(p => p.t > 0);
+    if (hoops.time <= 0 && !hoops.shot && !hoops.ended) {
+      hoops.ended = true;
+      sfx(180, 0.8, 150, 'sawtooth', 0.04);
+      hoops.hud();
+      setState(hoops, 'over', overMsg(hoops, 'POINTS', 2));
+      hoops.hud();
+    }
+  };
+  // Where the ball is drawn during a shot
+  hoops.ballPos = (s, G) => {
+    const hx = hoops.hoopAt(0), u = Math.min(1, s.t / s.dur);
+    const endY = {in: G.rimY, swish: G.rimY, rim: G.rimY - 4, short: G.rimY + 34, long: G.boardY + G.bh * 0.35, air: G.rimY + 10}[s.result];
+    const arc = 70 + (s.y0 - G.rimY) * 0.35;
+    let x = s.x0, y = s.y0 + (endY - s.y0) * u - arc * Math.sin(Math.PI * u), sc = 1 - 0.4 * u;
+    if (s.t > s.dur) {
+      const a = s.t - s.dur;
+      if (s.result === 'in' || s.result === 'swish') { x = x + (hx - x) * Math.min(1, a * 6); y = G.rimY + a * 140; }
+      else if (s.result === 'rim') { x += s.side * a * 110; y = G.rimY - 4 - 40 * a + 260 * a * a; }
+      else if (s.result === 'long') { y = endY + a * 40 + 300 * a * a; }
+      else { y = endY + 300 * a * a; }
+    }
+    return {x, y, sc};
+  };
+  const drawBall = (g, x, y, r) => {
+    g.fillStyle = INK; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#a5aa7b'; g.lineWidth = Math.max(1, r * 0.1);
+    g.beginPath(); g.moveTo(x - r, y); g.lineTo(x + r, y); g.stroke();
+    g.beginPath(); g.moveTo(x, y - r); g.lineTo(x, y + r); g.stroke();
+    g.beginPath(); g.arc(x - r * 1.25, y, r * 0.95, -0.85, 0.85); g.stroke();
+    g.beginPath(); g.arc(x + r * 1.25, y, r * 0.95, Math.PI - 0.85, Math.PI + 0.85); g.stroke();
+  };
+  hoops.draw = (t) => {
+    const {g, w, h} = hoops.k;
+    g.clearRect(0, 0, w, h);
+    if (!w) return;
+    const G = hoops.geo(), title = hoops.state === 'title', hx = title ? w / 2 : hoops.hoopAt(0);
+    g.globalAlpha = title ? 0.35 : 1;
+    // floor: key and free-throw circle in perspective
+    const fy = G.ballY + G.r + 6, ky = G.rimY + G.rimW * 0.55 + 46, kw0 = Math.min(w * 0.5, 230), kw1 = G.bw * 0.7;
+    g.fillStyle = 'rgba(48,60,43,.06)';
+    g.beginPath(); g.moveTo(w / 2 - kw0 / 2, fy); g.lineTo(w / 2 + kw0 / 2, fy); g.lineTo(w / 2 + kw1 / 2, ky); g.lineTo(w / 2 - kw1 / 2, ky); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(48,60,43,.22)'; g.lineWidth = 2; g.stroke();
+    const cy = ky + (fy - ky) * 0.3;
+    g.beginPath(); g.ellipse(w / 2, cy, (kw1 + (kw0 - kw1) * 0.3) / 2, (fy - ky) * 0.12, 0, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.moveTo(0, fy); g.lineTo(w, fy); g.stroke();
+    // support from the top, backboard, square
+    const bx = hx - G.bw / 2;
+    g.fillStyle = INK; g.fillRect(hx - 3, 30, 6, G.boardY - 30);
+    g.fillStyle = 'rgba(48,60,43,.12)'; g.fillRect(bx, G.boardY, G.bw, G.bh);
+    g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(bx, G.boardY, G.bw, G.bh);
+    g.lineWidth = 2; g.strokeRect(hx - G.rimW * 0.42, G.boardY + G.bh * 0.42, G.rimW * 0.84, G.bh * 0.38);
+    // back of the rim
+    g.strokeStyle = MID; g.lineWidth = 3;
+    g.beginPath(); g.ellipse(hx, G.rimY, G.rimW / 2, G.rimW * 0.12, 0, Math.PI, Math.PI * 2); g.stroke();
+    // ball
+    let ballFront = false;
+    if (!title && hoops.shot) {
+      const p = hoops.ballPos(hoops.shot, G);
+      ballFront = hoops.shot.t < hoops.shot.dur * 0.6;
+      if (ballFront) { /* drawn after the rim */ } else drawBall(g, p.x, p.y, G.r * p.sc);
+      hoops._front = ballFront ? p : null;
+    }
+    // net and front of the rim
+    const netH = G.rimW * 0.55, sway = hoops.shot && hoops.shot.t > hoops.shot.dur && (hoops.shot.result === 'in' || hoops.shot.result === 'swish') ? Math.sin(t * 30) * 3 : 0;
+    g.strokeStyle = MID; g.lineWidth = 1.5;
+    for (let i = 0; i <= 6; i++) {
+      const a = -G.rimW / 2 + (G.rimW * i) / 6, b = -G.rimW * 0.3 + (G.rimW * 0.6 * i) / 6;
+      g.beginPath(); g.moveTo(hx + a, G.rimY); g.lineTo(hx + b + sway, G.rimY + netH); g.stroke();
+    }
+    for (let j = 1; j <= 3; j++) {
+      const yy = G.rimY + (netH * j) / 3, ww = G.rimW / 2 - (G.rimW * 0.2 * j) / 3;
+      g.beginPath(); g.moveTo(hx - ww + sway * j / 3, yy); g.lineTo(hx + ww + sway * j / 3, yy); g.stroke();
+    }
+    g.strokeStyle = INK; g.lineWidth = 3.5;
+    g.beginPath(); g.ellipse(hx, G.rimY, G.rimW / 2, G.rimW * 0.12, 0, 0, Math.PI); g.stroke();
+    if (!title && hoops._front && hoops.shot) { const p = hoops._front; drawBall(g, p.x, p.y, G.r * p.sc); }
+    hoops._front = null;
+    // ball in hand + aim guide
+    if (title || (!hoops.shot && hoops.wait <= 0)) {
+      const x = title ? w / 2 : hoops.x;
+      if (!title) {
+        g.strokeStyle = 'rgba(48,60,43,.22)'; g.lineWidth = 1; g.setLineDash([3, 5]);
+        g.beginPath(); g.moveTo(x, G.ballY - G.r - 4); g.lineTo(x, G.rimY + 14); g.stroke(); g.setLineDash([]);
+      }
+      g.fillStyle = 'rgba(48,60,43,.25)'; g.beginPath(); g.ellipse(x, G.ballY + G.r + 6, G.r, G.r * 0.25, 0, 0, Math.PI * 2); g.fill();
+      drawBall(g, x, G.ballY, G.r);
+    }
+    // power meter
+    const mw = Math.min(260, w * 0.62), mx = (w - mw) / 2, my = G.meterY, mh = 12;
+    g.fillStyle = 'rgba(48,60,43,.12)'; g.fillRect(mx, my, mw, mh);
+    g.fillStyle = 'rgba(48,60,43,.4)'; g.fillRect(mx + mw * ZONE.lo, my, mw * (ZONE.hi - ZONE.lo), mh);
+    g.fillStyle = INK; g.fillRect(mx + mw * ZONE.mid - 1, my - 3, 2, mh + 6);
+    g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(mx, my, mw, mh);
+    const m = title ? 0.5 + 0.5 * Math.sin(t * 3) : hoops.meter, inZone = m >= ZONE.lo && m <= ZONE.hi;
+    g.fillStyle = INK; g.fillRect(mx + mw * m - 2, my - 6, 4, mh + 12);
+    text(g, 'SOFT', mx - 6, my + mh / 2, 10, 'right', MID);
+    text(g, 'HARD', mx + mw + 6, my + mh / 2, 10, 'left', MID);
+    if (!title && inZone && !hoops.shot) text(g, '▼ SHOOT! ▼', mx + mw * ZONE.mid, my - 14, 11);
+    g.globalAlpha = 1;
+    hoops.pops.forEach(p => { g.globalAlpha = Math.max(0, Math.min(1, p.t * 1.5)); text(g, p.txt, p.x, p.y, 15); });
+    g.globalAlpha = 1;
+  };
+
   // ---------- Menu and routing ----------
-  const games = {tennis, brick, padel};
+  const games = {tennis, hoops, padel};
   const gameBtns = [...document.querySelectorAll('.game')];
-  const names = {menu: 'Game menu', tennis: 'Tennis', brick: 'Brick', padel: '3D Padel'};
+  const names = {menu: 'Game menu', tennis: 'Tennis', hoops: 'Basketball', padel: '3D Padel'};
   let sel = 0;
   const select = (i) => { sel = (i + gameBtns.length) % gameBtns.length; gameBtns.forEach((g, j) => g.classList.toggle('sel', j === sel)); };
-  const LABELS = {menu: ['OK', 'BACK'], tennis: ['DRIVE', 'LOB'], brick: ['TURN', 'DROP'], padel: ['DRIVE', 'LOB']};
+  const LABELS = {menu: ['OK', 'BACK'], tennis: ['DRIVE', 'LOB'], hoops: ['SHOOT', 'SHOOT'], padel: ['DRIVE', 'LOB']};
   const setView = (v) => {
     screen.dataset.view = v; screen.setAttribute('aria-label', names[v]);
     document.getElementById('lblA').textContent = LABELS[v][0];
@@ -1220,7 +1240,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     if (games[v]) { setState(games[v], 'title'); games[v].k.fit(); }
   };
   gameBtns.forEach((g, i) => g.addEventListener('click', () => { select(i); tune([659, 880], 0.06, 'square', 0.03); setView(g.dataset.game); }));
-  brick.lines = 0; brick.level = 1; brick.hud();
+  hoops.hud();
   setView('menu');
 
   const press = (k) => {
