@@ -165,7 +165,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
           <div class="logo" id="logo" role="img" aria-label="MOBGAME"></div>
           <div class="copy">© BEARDY-NL</div>
           <ul class="games" aria-label="Choose a game">
-            <li><button class="game sel" data-game="padel">3D PADEL</button></li>
+            <li><button class="game sel" data-game="padel">PADEL</button></li>
             <li><button class="game" data-game="tennis">TENNIS</button></li>
             <li><button class="game" data-game="hoops">BASKETBALL</button></li>
           </ul>
@@ -199,7 +199,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
           <div class="hud"><span>US <span id="pYou">0</span></span><span>CPU <span id="pCpu">0</span></span></div>
           <div class="title b-title">
             <div class="tag">SMASH. VOLLEY. REPEAT.</div>
-            <h1>3D PADEL</h1>
+            <h1>PADEL</h1>
             <div class="press">PRESS START TO PLAY</div>
           </div>
           <div class="msg" role="status"></div>
@@ -1229,7 +1229,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   // ---------- Menu and routing ----------
   const games = {tennis, hoops, padel};
   const gameBtns = [...document.querySelectorAll('.game')];
-  const names = {menu: 'Game menu', tennis: 'Tennis', hoops: 'Basketball', padel: '3D Padel'};
+  const names = {menu: 'Game menu', tennis: 'Tennis', hoops: 'Basketball', padel: 'Padel'};
   let sel = 0;
   const select = (i) => { sel = (i + gameBtns.length) % gameBtns.length; gameBtns.forEach((g, j) => g.classList.toggle('sel', j === sel)); };
   const LABELS = {menu: ['OK', 'BACK'], tennis: ['DRIVE', 'LOB'], hoops: ['SHOOT', 'SHOOT'], padel: ['DRIVE', 'LOB']};
