@@ -767,7 +767,23 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     pGames.textContent = 'GAMES ' + gm.p + '-' + gm.c;
     pServe.textContent = 'SERVE · ' + ((padel.server || 'p') === 'p' ? 'YOU' : 'CPU');
   };
+  // Team chatter: speech bubbles after every point, never the same line twice in a row
+  const LINES = {
+    praise: ['Goed gedaan, maar wees eerlijk, dat kwam wel door mij!', 'Mooi vies balletje!', 'Lekker bezig!', 'Kijk m slaan dan!'],
+    tease: ['Zullen we maar stoppen?', 'De bal was uit!', 'Volgende keer wil ik met iemand anders spelen!', 'Doe maar ff niet meer zulke balletjes!']
+  };
+  const lineBags = {praise: [], tease: []}, lastLine = {};
+  const nextLine = (kind) => {
+    if (!lineBags[kind].length) {
+      const bag = LINES[kind].slice();
+      for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+      if (bag[bag.length - 1] === lastLine[kind]) bag.unshift(bag.pop());
+      lineBags[kind] = bag;
+    }
+    return (lastLine[kind] = lineBags[kind].pop());
+  };
   padel.setupServe = () => {
+    padel.bubble = null;
     const youServe = padel.server === 'p', side = (padel.pts.p + padel.pts.c) % 2 ? -1 : 1;
     const mk = (x, z) => ({x, z, swing: 0, anim: 0, kind: 'drive'});
     padel.me = youServe ? mk(1.4 * side, 1) : mk(1.4 * side, 1.4);
@@ -830,7 +846,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   };
   padel.point = (winner, why) => {
     if (padel.phase !== 'rally') return;
-    padel.phase = 'point'; padel.timer = 1.5;
+    padel.phase = 'point'; padel.timer = 2.6;
     if (winner === 'p') padel.score++;
     const s = padel.pts;
     s[winner]++;
@@ -842,6 +858,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
       if (padel.games[winner] >= 3) padel.matchOver = winner;
     }
     padel.banner = {msg, sub: why, t: 1.5};
+    padel.bubble = {p: Math.random() < 0.5 ? padel.me : padel.mate, txt: nextLine(winner === 'p' ? 'praise' : 'tease'), t: 2.6};
     const gameWon = msg.startsWith('GAME');
     if (winner === 'p') tune(gameWon ? [523, 659, 784, 1046] : [784, 1046], 0.08, 'square', 0.035);
     else tune(gameWon ? [392, 370, 349, 330] : [392, 330], 0.1, 'triangle', 0.045);
@@ -890,6 +907,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     if (padel.k.w !== padel.C.w || padel.k.h !== padel.C.h) padel.cam();
     const me = padel.me, mate = padel.mate, foes = padel.foes, b = padel.ball;
     if (padel.banner) { padel.banner.t -= dt; if (padel.banner.t <= 0) padel.banner = null; }
+    if (padel.bubble) { padel.bubble.t -= dt; if (padel.bubble.t <= 0) padel.bubble = null; }
     [me, mate, ...foes].forEach(p => { p.anim -= dt; });
     const vx = held.has('right') - held.has('left'), vz = held.has('up') - held.has('down'), sp = 5.2;
     me.x = Math.max(-4.6, Math.min(4.6, me.x + vx * sp * dt));
@@ -1018,13 +1036,36 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     items.sort((a, c) => c.z - a.z).forEach(i => i.d());
     g.globalAlpha = 1;
     if (!title && padel.banner && padel.state === 'play') {
-      const fs = Math.max(14, Math.min(20, Math.round(w / 24))), y = h * 0.3;
+      const fs = Math.max(14, Math.min(20, Math.round(w / 24))), y = Math.max(70, h * 0.17);
       g.font = '700 ' + fs + 'px Menlo, monospace';
       const bw = Math.max(g.measureText(padel.banner.msg).width, g.measureText(padel.banner.sub || '').width * 0.6) + 36;
       g.fillStyle = 'rgba(165,170,123,.92)'; g.fillRect(w / 2 - bw / 2, y - fs - 4, bw, fs * 2 + 22);
       g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(w / 2 - bw / 2, y - fs - 4, bw, fs * 2 + 22);
       text(g, padel.banner.msg, w / 2, y, fs);
       if (padel.banner.sub) text(g, padel.banner.sub, w / 2, y + fs + 2, Math.round(fs * 0.6), 'center', MID);
+    }
+    if (!title && padel.bubble && padel.state !== 'title') {
+      const p = padel.bubble.p, [fx, fy, s] = P3(p.x, 0, p.z), headY = fy - 18 * s / 10;
+      const fs = Math.max(11, Math.min(13, Math.round(w / 34))), lh = Math.round(fs * 1.35), padX = 10, padY = 8;
+      g.font = '700 ' + fs + 'px Menlo, "SF Mono", Consolas, monospace';
+      const maxW = Math.min(w * 0.62, 250), lines = [];
+      let cur = '';
+      padel.bubble.txt.split(' ').forEach(word => {
+        const tryLine = cur ? cur + ' ' + word : word;
+        if (g.measureText(tryLine).width > maxW && cur) { lines.push(cur); cur = word; } else cur = tryLine;
+      });
+      if (cur) lines.push(cur);
+      const bw = Math.ceil(Math.max(...lines.map(l => g.measureText(l).width)) + padX * 2), bh = lines.length * lh + padY * 2;
+      const bx = Math.round(Math.max(8, Math.min(w - 8 - bw, fx - bw / 2)));
+      const by = Math.round(Math.max(36, headY - 14 - bh));
+      const tx = Math.max(bx + 12, Math.min(bx + bw - 12, fx));
+      g.fillStyle = 'rgba(48,60,43,.3)'; g.fillRect(bx + 3, by + 3, bw, bh);
+      g.fillStyle = '#b3b88a'; g.fillRect(bx, by, bw, bh);
+      g.beginPath(); g.moveTo(tx - 6, by + bh - 1); g.lineTo(tx + 6, by + bh - 1); g.lineTo(fx, Math.min(headY - 4, by + bh + 10)); g.closePath(); g.fill();
+      g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(bx, by, bw, bh);
+      g.beginPath(); g.moveTo(tx - 6, by + bh); g.lineTo(fx, Math.min(headY - 4, by + bh + 10)); g.lineTo(tx + 6, by + bh); g.stroke();
+      g.fillStyle = '#b3b88a'; g.fillRect(tx - 5, by + bh - 2, 10, 3);
+      lines.forEach((l, i) => text(g, l, bx + bw / 2, by + padY + lh * i + lh / 2, fs));
     }
   };
 
