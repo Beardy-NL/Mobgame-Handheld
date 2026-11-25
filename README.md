@@ -4,6 +4,15 @@ A handheld game console in a single HTML page — a little space, a big adventur
 
 The console sits in the middle of the screen and scales to fit any window, from desktop to phone. The design comes from the Figma file *Handheld – Game Console*.
 
+## Games
+
+The handheld starts on a menu with the dot-matrix MOBGAME logo. Pick a game with ↑ ↓ and press A or Start; press B to go back to the menu.
+
+- **Star Drifter** — a little space, a big adventure
+- **Brick** — break them all
+
+More games will follow.
+
 ## Controls
 
 | Key | Button |
@@ -34,5 +43,6 @@ python3 src/build.py
 ## Roadmap
 
 - Make *Star Drifter* playable: movement, shooting, enemies, score and lives
+- Make *Brick* playable: paddle, ball, bricks, score and levels
 
 © BEARDY-NL
