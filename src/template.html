@@ -299,10 +299,25 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
         const d = noiseBuf.getChannelData(0);
         for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       }
-      if (ctx.state === 'suspended') ctx.resume();
+      if (ctx.state !== 'running' && soundOn) ctx.resume();
     } catch (e) { return null; }
     return ctx;
   };
+  // iOS: let Web Audio play even with the ring/silent switch on silent (Safari 16.4+),
+  // and unlock the audio engine inside a real tap with a silent buffer.
+  const setSession = (on) => { try { if (navigator.audioSession) navigator.audioSession.type = on ? 'playback' : 'auto'; } catch (e) {} };
+  const unlock = () => {
+    if (!soundOn || !audio()) return;
+    try {
+      const s = ctx.createBufferSource();
+      s.buffer = ctx.createBuffer(1, 1, 22050); s.connect(ctx.destination); s.start(0);
+      if (ctx.state !== 'running') ctx.resume();
+    } catch (e) {}
+  };
+  ['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
+    if (soundOn && (!ctx || ctx.state !== 'running')) unlock();
+  }, {passive: true}));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && soundOn && ctx && ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} } });
   const sfx = (f, d = 0.08, slide = 0, type = 'square', vol = 0.045, delay = 0) => {
     if (!soundOn || !audio()) return;
     try {
@@ -345,7 +360,8 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     document.getElementById('sndIcon').innerHTML = soundOn ? ICON_OFF : ICON_ON;
     document.getElementById('lcdSnd').innerHTML = soundOn ? ICON_ON : ICON_OFF;
     document.getElementById('lcdSnd').setAttribute('aria-label', soundOn ? 'Sound is on' : 'Sound is off');
-    if (soundOn) { audio(); tune([784, 1046], 0.07, 'triangle', 0.04); }
+    setSession(soundOn);
+    if (soundOn) { unlock(); tune([784, 1046], 0.07, 'triangle', 0.04); }
     else if (ctx) { try { ctx.suspend(); } catch (e) {} }
   });
 
