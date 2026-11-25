@@ -105,6 +105,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .b-title{top:30%}
   .scene{top:auto;bottom:0;width:calc(626px*var(--k));height:calc(457.625px*var(--k))}
   .hud{left:14px;right:14px;top:12px;font-size:11px}
+  .lcd-snd{top:11px;width:16px;height:16px;margin-left:-8px}
   .foot-scr{top:auto;bottom:10px;left:12px;right:12px;font-size:11px}
   .title{top:calc((100% - 457.625px*var(--k))*.5 + 96px*var(--k));font-size:calc(12px*var(--k));line-height:1.35}
   .tag{letter-spacing:.24em}
@@ -123,6 +124,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 }
 @media (max-width:390px){.base p{display:none}.controls{padding-inline:2px}}
 .view{position:absolute;inset:0;display:none}
+.lcd-snd{position:absolute;left:50%;top:14px;width:18px;height:18px;margin-left:-9px;z-index:3;color:var(--lcd-ink);pointer-events:none}
 .screen[data-view=menu] #v-menu,.screen[data-view=star] #v-star,.screen[data-view=brick] #v-brick,.screen[data-view=padel] #v-padel{display:block}
 .screen[data-view=menu] #v-menu{display:flex}
 #v-menu{flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 20px 44px}
@@ -161,6 +163,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
         <div>DOT MATRIX / 01</div>
       </div>
       <div class="screen" id="screen" data-view="menu" role="region" aria-label="Game screen">
+        <svg class="lcd-snd" id="lcdSnd" role="img" aria-label="Sound is off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
         <div class="view" id="v-menu">
           <div class="logo" id="logo" role="img" aria-label="MOBGAME"></div>
           <div class="copy">© BEARDY-NL</div>
@@ -241,8 +244,8 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
       <p><b>© BEARDY-NL</b></p>
       <div class="pills">
       <button class="pill sound" id="sound" aria-pressed="false" aria-label="Turn sound on">
-        <svg id="sndIcon" viewBox="0 0 24 24" fill="none" stroke="#30322f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
-        <span class="txt" id="sndTxt">SOUND OFF</span>
+        <svg id="sndIcon" viewBox="0 0 24 24" fill="none" stroke="#30322f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>
+        <span class="txt" id="sndTxt">SOUND ON</span>
       </button>
       <button class="pill start" data-k="start"><svg viewBox="0 0 24 24" fill="#f0f1e8"><path d="M7 4.5v15l12.5-7.5z"/></svg>START</button>
       </div>
@@ -332,15 +335,16 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     noise(0.012, 0.01, 3500);
   };
 
+  const ICON_ON = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>', ICON_OFF = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/>';
   const sound = document.getElementById('sound');
   sound.addEventListener('click', () => {
     soundOn = !soundOn;
     sound.setAttribute('aria-pressed', soundOn);
     sound.setAttribute('aria-label', soundOn ? 'Turn sound off' : 'Turn sound on');
-    document.getElementById('sndTxt').textContent = soundOn ? 'SOUND ON' : 'SOUND OFF';
-    document.getElementById('sndIcon').innerHTML = soundOn
-      ? '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>'
-      : '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/>';
+    document.getElementById('sndTxt').textContent = soundOn ? 'SOUND OFF' : 'SOUND ON';
+    document.getElementById('sndIcon').innerHTML = soundOn ? ICON_OFF : ICON_ON;
+    document.getElementById('lcdSnd').innerHTML = soundOn ? ICON_ON : ICON_OFF;
+    document.getElementById('lcdSnd').setAttribute('aria-label', soundOn ? 'Sound is on' : 'Sound is off');
     if (soundOn) { audio(); tune([784, 1046], 0.07, 'triangle', 0.04); }
     else if (ctx) { try { ctx.suspend(); } catch (e) {} }
   });
