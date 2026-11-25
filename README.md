@@ -8,7 +8,7 @@ The console sits in the middle of the screen and scales to fit any window, from 
 
 The handheld starts on a menu with the dot-matrix MOBGAME logo. Pick a game with ↑ ↓ and press A or Start.
 
-**Star Drifter** — a vertical space shooter. Fly with the D-pad, shoot with A (hold for auto-fire) and dash sideways with B; a dash makes you briefly untouchable. Every 2,000 points takes you to a new sector, where enemies get faster and start firing back. You have 3 lives.
+**Tennis** — 1 vs 1 against the computer on a 3D tennis court. Move with the D-pad, A for a drive (a smash when the ball is high), B for a lob; hold ← or → while hitting to aim. The first bounce has to land inside the singles lines. Real tennis scoring with deuce and advantage; first to 3 games wins. After every point your player has something to say about it.
 
 **Brick** — a falling-blocks puzzle. Move with ← →, turn with ↑ or A, soft-drop with ↓ and hard-drop with B. Full lines disappear; every 10 lines raises the level and the speed.
 
@@ -34,7 +34,7 @@ Open `index.html` in a browser. It is fully self-contained, so no server or buil
 ## Edit it
 
 - `src/template.html` — the source of the page (HTML, CSS and JavaScript)
-- `src/assets/` — the screen scene and the A/B button texture
+- `src/assets/` — the A/B button texture
 - `src/build.py` — inlines the images and writes `index.html`
 
 After changing the template, rebuild with:

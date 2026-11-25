@@ -33,7 +33,6 @@ body{margin:0;background:var(--bg);color:var(--ink);font:700 12px/16px var(--san
 .bez-row .dot{background:#c9e899;box-shadow:0 0 7px rgba(201,232,153,.53);transition:opacity .2s}
 .screen{position:relative;height:457.625px;border-radius:5px;background:var(--lcd);overflow:hidden;color:var(--lcd-ink);font-family:var(--mono);font-weight:700}
 .screen::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 3px 14px rgba(53,64,42,.33);pointer-events:none}
-.scene{position:absolute;top:0;left:50%;transform:translateX(-50%);width:626px;max-width:none;height:457.625px;image-rendering:pixelated}
 .hud{position:absolute;left:20px;right:20px;top:16px;display:flex;justify-content:space-between;letter-spacing:.6px}
 .lives{display:flex;gap:4px}
 .title{position:absolute;left:0;right:0;top:109.83px;text-align:center}
@@ -101,10 +100,8 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .bezel{flex:1;display:flex;flex-direction:column;padding:12px;border-radius:26px}
   .bez-row{font-size:11px;letter-spacing:1.8px}
   .screen{flex:1;height:auto;--k:1}
-  #v-star[data-state=title]{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='130' shape-rendering='crispEdges'%3E%3Cg fill='%23707a52'%3E%3Crect x='22' y='18' width='3' height='3'/%3E%3Crect x='96' y='44' width='1.6' height='1.6'/%3E%3Crect x='58' y='86' width='1.6' height='1.6'/%3E%3Crect x='128' y='104' width='3' height='3'/%3E%3Crect x='8' y='112' width='1.6' height='1.6'/%3E%3C/g%3E%3C/svg%3E") 0 0/150px 130px repeat}
   .b-title{top:30%}
-  .scene{top:auto;bottom:0;width:calc(626px*var(--k));height:calc(457.625px*var(--k))}
-  .hud{left:14px;right:14px;top:12px;font-size:11px}
+    .hud{left:14px;right:14px;top:12px;font-size:11px}
   .lcd-snd{top:11px;width:16px;height:16px;margin-left:-8px}
   .foot-scr{top:auto;bottom:10px;left:12px;right:12px;font-size:11px}
   .title{top:calc((100% - 457.625px*var(--k))*.5 + 96px*var(--k));font-size:calc(12px*var(--k));line-height:1.35}
@@ -125,7 +122,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 @media (max-width:390px){.base p{display:none}.controls{padding-inline:2px}}
 .view{position:absolute;inset:0;display:none}
 .lcd-snd{position:absolute;left:50%;top:14px;width:18px;height:18px;margin-left:-9px;z-index:3;color:var(--lcd-ink);pointer-events:none}
-.screen[data-view=menu] #v-menu,.screen[data-view=star] #v-star,.screen[data-view=brick] #v-brick,.screen[data-view=padel] #v-padel{display:block}
+.screen[data-view=menu] #v-menu,.screen[data-view=tennis] #v-tennis,.screen[data-view=brick] #v-brick,.screen[data-view=padel] #v-padel{display:block}
 .screen[data-view=menu] #v-menu{display:flex}
 #v-menu{flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 20px 44px}
 .logo{width:min(80%,330px)}.logo svg{display:block;width:100%;height:auto}
@@ -140,7 +137,7 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .hint{position:absolute;left:0;right:0;bottom:12px;font-size:10px;letter-spacing:1.6px;opacity:.7}
 .back{opacity:.6}
 .view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.view:not([data-state=title]) .title,.view:not([data-state=title]) .scene{display:none}
+.view:not([data-state=title]) .title{display:none}
 .hud,.foot-scr{z-index:1}
 .b-title{top:132px}
 .msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;display:none;text-align:center;white-space:nowrap;
@@ -169,23 +166,22 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
           <div class="copy">© BEARDY-NL</div>
           <ul class="games" aria-label="Choose a game">
             <li><button class="game sel" data-game="padel">3D PADEL</button></li>
-            <li><button class="game" data-game="star">STAR DRIFTER</button></li>
+            <li><button class="game" data-game="tennis">TENNIS</button></li>
             <li><button class="game" data-game="brick">BRICK</button></li>
           </ul>
           <div class="soon">(more games soon available)</div>
           <div class="hint">↑ ↓ CHOOSE · A / START PLAY</div>
         </div>
-        <div class="view" id="v-star" data-state="title">
-          <img class="scene" alt="" src="@@SCENE@@">
+        <div class="view" id="v-tennis" data-state="title">
           <canvas aria-hidden="true"></canvas>
-          <div class="hud"><span>1UP <span id="score">00000</span></span><span class="lives" aria-label="3 lives"><span>♥</span><span>♥</span><span>♥</span></span></div>
-          <div class="title">
-            <div class="tag">A LITTLE SPACE. A BIG ADVENTURE.</div>
-            <h1>STAR<br>DRIFTER</h1>
-            <div class="press">PRESS START TO EXPLORE</div>
+          <div class="hud"><span>YOU <span id="tYou">0</span></span><span>CPU <span id="tCpu">0</span></span></div>
+          <div class="title b-title">
+            <div class="tag">SERVE. RALLY. WIN.</div>
+            <h1>TENNIS</h1>
+            <div class="press">PRESS START TO PLAY</div>
           </div>
           <div class="msg" role="status"></div>
-          <div class="foot-scr"><span class="f-left">SECTOR 01</span><span class="back">B · MENU</span><span>✦ DEEP SPACE</span></div>
+          <div class="foot-scr"><span class="f-left">GAMES 0-0</span><span class="back">B · MENU</span><span id="tServe">SERVE · YOU</span></div>
         </div>
         <div class="view" id="v-brick" data-state="title">
           <canvas aria-hidden="true"></canvas>
@@ -234,8 +230,8 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
         </div>
       </div>
       <div class="ab">
-        <div class="col b"><div class="pit"><button class="round" data-k="b" aria-label="B: Dash (X)">B</button></div><span id="lblB">DASH</span></div>
-        <div class="col a"><div class="pit"><button class="round" data-k="a" aria-label="A: Shoot (space)">A</button></div><span id="lblA">SHOOT</span></div>
+        <div class="col b"><div class="pit"><button class="round" data-k="b" aria-label="B button (X)">B</button></div><span id="lblB">BACK</span></div>
+        <div class="col a"><div class="pit"><button class="round" data-k="a" aria-label="A button (Space)">A</button></div><span id="lblA">OK</span></div>
       </div>
     </div>
 
@@ -432,149 +428,6 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     const isBest = saveBest(G.id, G.score);
     return '<b>GAME OVER</b>' + label + ' ' + pad(G.score, digits) + '<br>' +
       (isBest ? 'NEW BEST!' : 'BEST ' + pad(best[G.id] || 0, digits)) + '<i>START · PLAY AGAIN<br>B · MENU</i>';
-  };
-
-  // ---------- STAR DRIFTER ----------
-  const SHIP = ['...#...', '..###..', '..#.#..', '.#####.', '##.#.##', '#..#..#'];
-  const FOE = [
-    ['#.####.#', '##....##', '#.#..#.#', '########', '.#....#.', '#......#'],
-    ['#.####.#', '##....##', '#.#..#.#', '########', '.#....#.', '.#....#.']
-  ];
-  const ROCK = ['.###.', '##.##', '#####', '#.###', '.###.'];
-  const star = {id: 'star', k: kit('v-star'), state: 'title', score: 0};
-  const sScore = document.getElementById('score'), sLives = star.k.view.querySelector('.lives'), sSector = star.k.view.querySelector('.f-left');
-  let starHud = '';
-  star.hud = () => {
-    const key = star.score + '|' + star.lives + '|' + star.sector;
-    if (key === starHud) return;
-    starHud = key;
-    sScore.textContent = pad(star.score, 5);
-    sLives.innerHTML = [0, 1, 2].map(i => '<span>' + (i < star.lives ? '♥' : '♡') + '</span>').join('');
-    sLives.setAttribute('aria-label', star.lives + ' lives');
-    sSector.textContent = 'SECTOR ' + pad(star.sector, 2);
-  };
-  star.reset = () => {
-    star.k.fit();
-    const {w, h} = star.k, U = Math.max(2, Math.round(w / 130));
-    Object.assign(star, {U, x: w / 2, y: h - 30 - 6 * U, face: 1, bullets: [], foes: [], shots: [], parts: [],
-      score: 0, lives: 3, sector: 1, inv: 1.2, fire: 0, dashT: 0, dashCd: 0, spawn: 0.8, banner: 0});
-    star.stars = Array.from({length: 70}, () => ({x: Math.random() * w, y: Math.random() * h, l: Math.floor(Math.random() * 3)}));
-    star.hud();
-  };
-  star.start = () => { star.reset(); setState(star, 'play'); tune([392, 523, 659, 784], 0.07, 'square', 0.035); };
-  star.shoot = () => { star.bullets.push({x: star.x, y: star.y - 4 * star.U}); sfx(1300, 0.06, 500, 'square', 0.022); };
-  star.boom = (x, y, n = 14) => {
-    for (let i = 0; i < n; i++) {
-      const a = Math.random() * Math.PI * 2, v = (10 + Math.random() * 30) * star.U;
-      star.parts.push({x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0.3 + Math.random() * 0.4});
-    }
-  };
-  star.press = (k) => {
-    if (k === 'a') { star.shoot(); star.fire = 0.22; }
-    if (k === 'b' && star.dashT <= 0 && star.dashCd <= 0) {
-      if (held.has('left')) star.face = -1;
-      if (held.has('right')) star.face = 1;
-      star.dashT = 0.16; star.dashCd = 0.7; sfx(300, 0.14, 1200, 'triangle', 0.035); noise(0.14, 0.025, 1500, 0, 6000);
-    }
-  };
-  const overlap = (ax, ay, aw, ah, bx, by, bw, bh) => Math.abs(ax - bx) * 2 < aw + bw && Math.abs(ay - by) * 2 < ah + bh;
-  star.hit = () => {
-    star.lives--; star.inv = 2; star.boom(star.x, star.y, 22); noise(0.5, 0.09, 1600, 0, 120); sfx(160, 0.4, 40, 'sawtooth', 0.035);
-    if (star.lives <= 0) { star.hud(); setState(star, 'over', overMsg(star, 'SCORE', 5)); }
-  };
-  star.update = (dt) => {
-    const {w, h} = star.k, U = star.U;
-    star.stars.forEach(s => {
-      s.y += [6, 14, 28][s.l] * U * dt;
-      if (s.y > h) { s.y -= h; s.x = Math.random() * w; }
-    });
-    const vx = held.has('right') - held.has('left'), vy = held.has('down') - held.has('up'), sp = 50 * U;
-    if (vx) star.face = vx;
-    star.x += vx * sp * dt; star.y += vy * sp * dt;
-    if (star.dashT > 0) { star.dashT -= dt; star.x += star.face * sp * 3.4 * dt; }
-    star.dashCd -= dt; star.inv -= dt; star.banner -= dt;
-    star.x = Math.max(4 * U, Math.min(w - 4 * U, star.x));
-    star.y = Math.max(h * 0.45, Math.min(h - 26 - 4 * U, star.y));
-    if (held.has('a')) { star.fire -= dt; if (star.fire <= 0) { star.shoot(); star.fire = 0.22; } }
-
-    star.spawn -= dt;
-    if (star.spawn <= 0) {
-      star.spawn = Math.max(0.3, 1.15 - star.sector * 0.09) * (0.6 + Math.random() * 0.8);
-      const rock = Math.random() < 0.22, bx = 6 * U + Math.random() * (w - 12 * U);
-      star.foes.push({x: bx, bx, y: -6 * U, t: 0, rock, hp: rock ? 3 : 1, flash: 0, ph: Math.random() * 6,
-        v: (rock ? 9 : 13 + star.sector * 1.6 + Math.random() * 6) * U, amp: rock ? 0 : (2 + Math.random() * 10) * U});
-    }
-    star.bullets.forEach(b => { b.y -= 120 * U * dt; if (b.y < -10) b.dead = 1; });
-    star.shots.forEach(s => { s.y += 55 * U * dt; if (s.y > h + 10) s.dead = 1; });
-    star.foes.forEach(f => {
-      f.t += dt; f.flash -= dt; f.y += f.v * dt;
-      f.x = Math.max(5 * U, Math.min(w - 5 * U, f.bx + Math.sin(f.t * 2 + f.ph) * f.amp));
-      if (f.y > h + 8 * U) f.dead = 1;
-      if (!f.rock && star.sector >= 2 && f.y > 0 && Math.random() < dt * (0.12 + star.sector * 0.04)) {
-        star.shots.push({x: f.x, y: f.y + 3 * U}); sfx(500, 0.06, 250, 'square', 0.016);
-      }
-    });
-    star.bullets.forEach(b => {
-      if (b.dead) return;
-      for (const f of star.foes) {
-        if (f.dead) continue;
-        const fw = (f.rock ? 5 : 8) * U, fh = (f.rock ? 5 : 6) * U;
-        if (overlap(b.x, b.y, U, 3 * U, f.x, f.y, fw, fh)) {
-          b.dead = 1; f.hp--; f.flash = 0.08;
-          if (f.hp <= 0) { f.dead = 1; star.boom(f.x, f.y); star.score += f.rock ? 150 : 100; noise(0.25, 0.06, 2400, 0, 200); sfx(300, 0.12, 80, 'square', 0.022); }
-          else { star.score += 10; sfx(320, 0.04, 0, 'square', 0.025); }
-          break;
-        }
-      }
-    });
-    if (star.inv <= 0 && star.dashT <= 0) {
-      const sw = 5 * U, sh = 5 * U;
-      for (const f of star.foes) {
-        if (!f.dead && overlap(star.x, star.y, sw, sh, f.x, f.y, (f.rock ? 5 : 8) * U, (f.rock ? 5 : 6) * U)) { f.dead = 1; star.boom(f.x, f.y); star.hit(); break; }
-      }
-      if (star.state === 'play' && star.inv <= 0) {
-        for (const s of star.shots) {
-          if (!s.dead && overlap(star.x, star.y, sw, sh, s.x, s.y, U * 1.4, U * 1.4)) { s.dead = 1; star.hit(); break; }
-        }
-      }
-    }
-    star.parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt; if (p.t <= 0) p.dead = 1; });
-    ['bullets', 'shots', 'foes', 'parts'].forEach(key => { star[key] = star[key].filter(o => !o.dead); });
-    const sec = 1 + Math.floor(star.score / 2000);
-    if (sec !== star.sector) { star.sector = sec; star.banner = 1.6; tune([523, 659, 784, 1046, 1319], 0.07, 'square', 0.035); }
-    star.hud();
-  };
-  star.draw = (t) => {
-    const {g, w, h} = star.k;
-    g.clearRect(0, 0, w, h);
-    if (star.state === 'title' || !star.stars) return;
-    const U = star.U;
-    star.stars.forEach(s => {
-      const z = [0.5, 0.8, 1.2][s.l] * U;
-      g.fillStyle = s.l === 2 ? MID : SOFT;
-      g.fillRect(Math.round(s.x), Math.round(s.y), Math.max(1, z), Math.max(1, z));
-    });
-    g.fillStyle = INK;
-    star.bullets.forEach(b => g.fillRect(Math.round(b.x - U / 2), Math.round(b.y - 1.5 * U), U, 3 * U));
-    g.fillStyle = MID;
-    star.shots.forEach(s => g.fillRect(Math.round(s.x - U * 0.7), Math.round(s.y - U * 0.7), U * 1.4, U * 1.4));
-    star.foes.forEach(f => {
-      if (f.rock) sprite(g, ROCK, f.x, f.y, U, f.flash > 0 ? INK : MID);
-      else sprite(g, FOE[Math.floor(f.t * 3) % 2], f.x, f.y, U, INK);
-    });
-    if (star.state !== 'over') {
-      if (star.dashT > 0) {
-        g.globalAlpha = 0.3; sprite(g, SHIP, star.x - star.face * 6 * U, star.y, U, INK);
-        g.globalAlpha = 0.15; sprite(g, SHIP, star.x - star.face * 12 * U, star.y, U, INK); g.globalAlpha = 1;
-      }
-      if (star.inv <= 0 || Math.floor(t * 12) % 2) {
-        sprite(g, SHIP, star.x, star.y, U, INK);
-        if (Math.floor(t * 16) % 2) { g.fillStyle = MID; g.fillRect(Math.round(star.x - U / 2), Math.round(star.y + 3 * U), U, U); }
-      }
-    }
-    g.fillStyle = INK;
-    star.parts.forEach(p => g.fillRect(Math.round(p.x), Math.round(p.y), U, U));
-    if (star.banner > 0 && Math.floor(t * 4) % 2) text(g, 'SECTOR ' + pad(star.sector, 2), w / 2, h * 0.35, 18);
   };
 
   // ---------- BRICK (falling blocks) ----------
@@ -788,9 +641,9 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     praise: ['Goed gedaan, maar wees eerlijk, dat kwam wel door mij!', 'Mooi vies balletje!', 'Lekker bezig!', 'Kijk m slaan dan!'],
     tease: ['Zullen we maar stoppen?', 'De bal was uit!', 'Volgende keer wil ik met iemand anders spelen!', 'Doe maar ff niet meer zulke balletjes!']
   };
-  const lineBags = {praise: [], tease: []}, lastLine = {};
+  const lineBags = {}, lastLine = {};
   const nextLine = (kind) => {
-    if (!lineBags[kind].length) {
+    if (!(lineBags[kind] || []).length) {
       const bag = LINES[kind].slice();
       for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
       if (bag[bag.length - 1] === lastLine[kind]) bag.unshift(bag.pop());
@@ -985,8 +838,8 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
       }
     }
   };
-  const figure = (g, p, ink, facing) => {
-    const [fx, fy, s] = P3(p.x, 0, p.z), u = s / 10;
+  const figure = (g, p, ink, facing, proj = P3) => {
+    const [fx, fy, s] = proj(p.x, 0, p.z), u = s / 10;
     g.fillStyle = 'rgba(48,60,43,.25)';
     g.beginPath(); g.ellipse(fx, fy, 3.8 * u, 1.2 * u, 0, 0, Math.PI * 2); g.fill();
     g.fillStyle = ink;
@@ -1085,13 +938,281 @@ button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     }
   };
 
+  // ---------- TENNIS (1 vs 1) ----------
+  const TL = 23.77, THALF = TL / 2, SW = 4.115, DW = 5.485, TNET = 0.914, SVC = 6.4;
+  const tennis = {id: 'tennis', k: kit('v-tennis'), state: 'title', score: 0};
+  const tYou = document.getElementById('tYou'), tCpu = document.getElementById('tCpu'),
+    tGames = tennis.k.view.querySelector('.f-left'), tServe = document.getElementById('tServe');
+  LINES.tPraise = ['Zag je niet aankomen he?', 'Ga anders ff koffie halen, maak ik de wedstrijd wel af',
+    'Speel je nog een keer de bal terug of niet?', 'Volgende keer in de andere hoek!'];
+  LINES.tTease = ['Waar zijn de ramen als je ze nodig hebt?', 'Ik merk aan mijzelf dat ik liever padel speel!',
+    'De bal was echt uit!', 'Nu kan ik niemand anders de schuld geven!'];
+  tennis.cam = () => {
+    const {w, h} = tennis.k, f = 0.93 * w, span = h - 94, camZ = -16, dN = -1.6 - camZ, dT = TL + 4 - camZ, yT = 2.5;
+    const camY = Math.max(4, Math.min(30, (span / f - yT / dT) / (1 / dN - 1 / dT)));
+    tennis.C = {f, camY, camZ, hz: 48 - (camY - yT) * f / dT, w, h};
+  };
+  const PT = (x, y, z) => {
+    const C = tennis.C, s = C.f / Math.max(0.5, z - C.camZ);
+    return [C.w / 2 + x * s, C.hz + (C.camY - y) * s, s];
+  };
+  const tstep = (b, dt, ev) => {
+    const pz = b.z;
+    b.vy -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
+    if ((pz - THALF) * (b.z - THALF) <= 0 && pz !== b.z && b.y < TNET + BR && Math.abs(b.x) < DW + 0.9) {
+      b.z = pz; b.vz *= -0.2; b.vx *= 0.5; if (ev) ev('net');
+    }
+    if (b.y < BR) { b.y = BR; if (b.vy < 0) { b.vy = -b.vy * 0.7; b.vx *= 0.9; b.vz *= 0.9; if (ev) ev('floor'); } }
+    if (Math.abs(b.x) > 16 || b.z < -12 || b.z > TL + 12) { if (ev) ev('gone'); }
+  };
+  const tCall = (s, o) => {
+    if (s >= 3 && o >= 3) return s === o ? '40' : s > o ? 'AD' : '40';
+    return PTS[Math.min(3, s)];
+  };
+  tennis.hud = () => {
+    const s = tennis.pts || {p: 0, c: 0}, gm = tennis.games || {p: 0, c: 0};
+    tYou.textContent = tCall(s.p, s.c);
+    tCpu.textContent = tCall(s.c, s.p);
+    tGames.textContent = 'GAMES ' + gm.p + '-' + gm.c;
+    tServe.textContent = 'SERVE · ' + ((tennis.server || 'p') === 'p' ? 'YOU' : 'CPU');
+  };
+  tennis.setupServe = () => {
+    tennis.bubble = null;
+    const youServe = tennis.server === 'p', side = (tennis.pts.p + tennis.pts.c) % 2 ? -1 : 1;
+    tennis.me = {x: youServe ? 1.2 * side : -2 * side, z: youServe ? -0.8 : -1.2, swing: 0, anim: 0, kind: 'drive'};
+    tennis.cpu = {x: youServe ? 2 * side : -1.2 * side, z: youServe ? TL + 1.2 : TL + 0.8, swing: 0, anim: 0};
+    const sv = youServe ? tennis.me : tennis.cpu;
+    tennis.ball = {x: sv.x + 0.35, y: 1, z: sv.z + (youServe ? 0.3 : -0.3), vx: 0, vy: 0, vz: 0};
+    tennis.phase = 'serve'; tennis.timer = 1.1; tennis.bounces = 0; tennis.last = tennis.server;
+    const {p, c} = tennis.pts;
+    if (p >= 3 && c >= 3) tennis.banner = {msg: p === c ? 'DEUCE' : (p > c ? 'ADVANTAGE YOU' : 'ADVANTAGE CPU'), sub: '', t: 1.5};
+    else if (youServe) tennis.banner = {msg: 'YOUR SERVE', sub: 'PRESS A', t: 1.4};
+    tennis.hud();
+  };
+  tennis.reset = () => {
+    tennis.k.fit(); tennis.cam();
+    Object.assign(tennis, {pts: {p: 0, c: 0}, games: {p: 0, c: 0}, server: 'p', banner: null, matchOver: null, score: 0});
+    tennis.setupServe();
+  };
+  tennis.start = () => { tennis.reset(); setState(tennis, 'play'); tune([523, 659, 784, 1046], 0.08, 'triangle', 0.045); };
+  tennis.shoot = (who, kind, hitter) => {
+    const b = tennis.ball, serving = tennis.phase === 'serve';
+    let tx, tz, T;
+    if (who === 'p') {
+      const aim = held.has('left') ? -1 : held.has('right') ? 1 : 0;
+      if (serving) { tx = -Math.sign(b.x || 1) * 2; tz = THALF + 4.6; T = 1.05; }
+      else {
+        tx = aim ? aim * 3.3 : (Math.abs(tennis.cpu.x) > 1 ? -Math.sign(tennis.cpu.x) * 3 : (Math.random() < 0.5 ? -3 : 3));
+        if (kind === 'lob') { tz = TL - 1.6; T = 2.1; }
+        else if (b.y > 2) { tz = THALF + 5 + Math.random() * 3; T = 0.7; kind = 'smash'; }
+        else { tz = THALF + 7 + Math.random() * 3.5; T = 1.15; }
+      }
+      tennis.cpuMiss = Math.random() < (kind === 'smash' ? 0.45 : kind === 'lob' ? 0.15 : 0.13);
+    } else {
+      if (serving) { tx = -Math.sign(b.x || 1) * 2; tz = THALF - 4.6; T = 1.05; }
+      else {
+        tx = Math.abs(tennis.me.x) > 1 ? -Math.sign(tennis.me.x) * (2.2 + Math.random() * 1.2) : (Math.random() * 2 - 1) * 3.3;
+        if (tennis.me.z > THALF - 4 && Math.random() < 0.6) { tz = 1.5; T = 2; }
+        else { tz = 1 + Math.random() * 5; T = Math.max(0.95, 1.2 - (tennis.games.p + tennis.games.c) * 0.04); }
+      }
+    }
+    for (let i = 0; i < 8; i++) {
+      const vz = (tz - b.z) / T, vy = (BR - b.y + 0.5 * GRAV * T * T) / T, tn = (THALF - b.z) / vz;
+      const yn = b.y + vy * tn - 0.5 * GRAV * tn * tn;
+      if (tn < 0 || tn > T || yn > TNET + 0.35) break;
+      T += 0.12;
+    }
+    b.vx = (tx - b.x) / T; b.vz = (tz - b.z) / T; b.vy = (BR - b.y + 0.5 * GRAV * T * T) / T;
+    if (serving) tennis.banner = null;
+    tennis.last = who; tennis.bounces = 0; tennis.phase = 'rally';
+    if (hitter) hitter.anim = 0.3;
+    sfx(kind === 'smash' ? 520 : 820, 0.05, kind === 'smash' ? 200 : 410, 'triangle', 0.07); noise(0.03, kind === 'smash' ? 0.05 : 0.03, 4000);
+  };
+  tennis.point = (winner, why) => {
+    if (tennis.phase !== 'rally') return;
+    tennis.phase = 'point'; tennis.timer = 2.6;
+    const s = tennis.pts, o = winner === 'p' ? 'c' : 'p';
+    s[winner]++;
+    let msg = winner === 'p' ? 'POINT YOU' : 'POINT CPU';
+    if (s[winner] >= 4 && s[winner] - s[o] >= 2) {
+      tennis.games[winner]++; s.p = 0; s.c = 0;
+      msg = winner === 'p' ? 'GAME YOU' : 'GAME CPU';
+      tennis.server = tennis.server === 'p' ? 'c' : 'p';
+      if (tennis.games[winner] >= 3) tennis.matchOver = winner;
+    }
+    tennis.banner = {msg, sub: why, t: 1.5};
+    tennis.bubble = {p: tennis.me, txt: nextLine(winner === 'p' ? 'tPraise' : 'tTease'), t: 2.6};
+    const gameWon = msg.startsWith('GAME');
+    if (winner === 'p') tune(gameWon ? [523, 659, 784, 1046] : [784, 1046], 0.08, 'square', 0.035);
+    else tune(gameWon ? [392, 370, 349, 330] : [392, 330], 0.1, 'triangle', 0.045);
+    tennis.hud();
+  };
+  tennis.event = (e) => {
+    if (tennis.phase !== 'rally') return;
+    const b = tennis.ball, side = b.z < THALF ? 'p' : 'c', hitter = tennis.last, recv = hitter === 'p' ? 'c' : 'p';
+    if (e === 'net') { noise(0.12, 0.04, 600); tennis.point(recv, 'NET'); return; }
+    if (e === 'gone') { tennis.point(tennis.bounces ? hitter : recv, tennis.bounces ? 'WINNER' : 'OUT'); return; }
+    if (e === 'floor') {
+      if (side === hitter) { tennis.point(tennis.bounces ? hitter : recv, tennis.bounces ? 'WINNER' : 'NET'); return; }
+      if (!tennis.bounces) {
+        const inside = Math.abs(b.x) <= SW + BR && (side === 'c' ? b.z <= TL + BR : b.z >= -BR);
+        if (!inside) { sfx(200, 0.06, 0, 'square', 0.03); tennis.point(recv, 'OUT'); return; }
+      }
+      tennis.bounces++; sfx(220, 0.03, 140, 'triangle', 0.035);
+      if (tennis.bounces >= 2) tennis.point(hitter, 'WINNER');
+    }
+  };
+  const tCanHit = (p, who) => {
+    const b = tennis.ball;
+    if (tennis.phase !== 'rally' || tennis.last === who) return false;
+    if (who === 'p' ? b.z > THALF : b.z < THALF) return false;
+    return Math.hypot(b.x - p.x, b.z - p.z) < (who === 'p' ? 1.6 : 1.35) && b.y < 2.9;
+  };
+  tennis.predict = () => {
+    const b = Object.assign({}, tennis.ball);
+    let bounced = 0, lastPos = {x: b.x, z: TL - 2};
+    for (let i = 0; i < 240; i++) {
+      tstep(b, 1 / 60, e => { if (e === 'floor' && b.z > THALF) bounced++; });
+      if (b.z > THALF + 0.4) {
+        lastPos = {x: b.x, z: b.z};
+        if (bounced >= 1 && b.y < 1.5) return lastPos;
+      }
+    }
+    return lastPos;
+  };
+  tennis.press = (k) => {
+    if (k !== 'a' && k !== 'b') return;
+    if (tennis.phase === 'serve' && tennis.server === 'p') { tennis.shoot('p', 'drive', tennis.me); return; }
+    if (tennis.phase === 'rally') { tennis.me.swing = 0.3; tennis.me.kind = k === 'b' ? 'lob' : 'drive'; noise(0.08, 0.015, 1500, 0, 5000); }
+  };
+  tennis.update = (dt) => {
+    if (tennis.k.w !== tennis.C.w || tennis.k.h !== tennis.C.h) tennis.cam();
+    const me = tennis.me, cpu = tennis.cpu, b = tennis.ball;
+    if (tennis.banner) { tennis.banner.t -= dt; if (tennis.banner.t <= 0) tennis.banner = null; }
+    if (tennis.bubble) { tennis.bubble.t -= dt; if (tennis.bubble.t <= 0) tennis.bubble = null; }
+    me.anim -= dt; cpu.anim -= dt;
+    const vx = held.has('right') - held.has('left'), vz = held.has('up') - held.has('down'), sp = 6.2;
+    me.x = Math.max(-7, Math.min(7, me.x + vx * sp * dt));
+    if (tennis.phase !== 'serve' || tennis.server !== 'p') me.z = Math.max(-2.2, Math.min(THALF - 0.7, me.z + vz * sp * dt));
+    if (tennis.phase === 'serve') {
+      const sv = tennis.server === 'p' ? me : cpu;
+      Object.assign(b, {x: sv.x + 0.35, y: 1 + Math.abs(Math.sin(performance.now() / 300)) * 0.15, z: sv.z + (tennis.server === 'p' ? 0.3 : -0.3), vx: 0, vy: 0, vz: 0});
+      if (tennis.server === 'c') { tennis.timer -= dt; if (tennis.timer <= 0) tennis.shoot('c', 'drive', cpu); }
+      return;
+    }
+    for (let i = 0; i < 3; i++) tstep(b, dt / 3, tennis.event);
+    if (me.swing > 0) {
+      me.swing -= dt; me.anim = Math.max(me.anim, 0.2);
+      if (tCanHit(me, 'p')) { tennis.shoot('p', me.kind, me); me.swing = 0; }
+    }
+    const cspd = 5 + (tennis.games.p + tennis.games.c) * 0.15;
+    let tx = 0, tz = TL + 1;
+    if (tennis.phase === 'rally' && tennis.last === 'p') { const t = tennis.predict(); tx = t.x; tz = Math.max(THALF + 0.8, Math.min(TL + 4, t.z + 0.4)); }
+    const dx = tx - cpu.x, dz = tz - cpu.z, dist = Math.hypot(dx, dz);
+    if (dist > 0.05) { const m = Math.min(dist, cspd * dt); cpu.x += dx / dist * m; cpu.z += dz / dist * m; }
+    if (tCanHit(cpu, 'c') && !tennis.cpuMiss && (tennis.bounces >= 1 || cpu.z < THALF + 3)) tennis.shoot('c', 'drive', cpu);
+    if (tennis.phase === 'point') {
+      tennis.timer -= dt;
+      if (tennis.timer <= 0) {
+        if (tennis.matchOver) {
+          const win = tennis.matchOver === 'p';
+          if (win) best.tennisWins = (best.tennisWins || 0) + 1;
+          try { localStorage.setItem('mobgame-best', JSON.stringify(best)); } catch (e) {}
+          setState(tennis, 'over', '<b>' + (win ? 'YOU WIN!' : 'CPU WINS') + '</b>GAMES ' + tennis.games.p + ' - ' + tennis.games.c +
+            '<br>MATCHES WON ' + (best.tennisWins || 0) + '<i>START · PLAY AGAIN<br>B · MENU</i>');
+        } else tennis.setupServe();
+      }
+    }
+  };
+  const speech = (g, w, txt, fx, headY) => {
+    const fs = Math.max(11, Math.min(13, Math.round(w / 34))), lh = Math.round(fs * 1.35), padX = 10, padY = 8;
+    g.font = '700 ' + fs + 'px Menlo, "SF Mono", Consolas, monospace';
+    const maxW = Math.min(w * 0.62, 250), lines = [];
+    let cur = '';
+    txt.split(' ').forEach(word => {
+      const tryLine = cur ? cur + ' ' + word : word;
+      if (g.measureText(tryLine).width > maxW && cur) { lines.push(cur); cur = word; } else cur = tryLine;
+    });
+    if (cur) lines.push(cur);
+    const bw = Math.ceil(Math.max(...lines.map(l => g.measureText(l).width)) + padX * 2), bh = lines.length * lh + padY * 2;
+    const bx = Math.round(Math.max(8, Math.min(w - 8 - bw, fx - bw / 2)));
+    const by = Math.round(Math.max(36, headY - 14 - bh));
+    const tx = Math.max(bx + 12, Math.min(bx + bw - 12, fx)), tipY = Math.min(headY - 4, by + bh + 10);
+    g.fillStyle = 'rgba(48,60,43,.3)'; g.fillRect(bx + 3, by + 3, bw, bh);
+    g.fillStyle = '#b3b88a'; g.fillRect(bx, by, bw, bh);
+    g.beginPath(); g.moveTo(tx - 6, by + bh - 1); g.lineTo(tx + 6, by + bh - 1); g.lineTo(fx, tipY); g.closePath(); g.fill();
+    g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(bx, by, bw, bh);
+    g.beginPath(); g.moveTo(tx - 6, by + bh); g.lineTo(fx, tipY); g.lineTo(tx + 6, by + bh); g.stroke();
+    g.fillStyle = '#b3b88a'; g.fillRect(tx - 5, by + bh - 2, 10, 3);
+    lines.forEach((l, i) => text(g, l, bx + bw / 2, by + padY + lh * i + lh / 2, fs));
+  };
+  tennis.draw = (t) => {
+    const {g, w, h} = tennis.k;
+    g.clearRect(0, 0, w, h);
+    if (!tennis.C || tennis.C.w !== w || tennis.C.h !== h) tennis.cam();
+    const title = tennis.state === 'title';
+    g.globalAlpha = title ? 0.35 : 1;
+    const poly = (pts, fill, stroke, lw = 1.5) => {
+      g.beginPath();
+      pts.forEach((p, i) => { const q = PT(p[0], p[1], p[2]); if (i) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); });
+      g.closePath();
+      if (fill) { g.fillStyle = fill; g.fill(); }
+      if (stroke) { g.strokeStyle = stroke; g.lineWidth = lw; g.stroke(); }
+    };
+    const line = (a, b, stroke = INK, lw = 2) => poly([a, b], null, stroke, lw);
+    poly([[-9, 0, -4], [9, 0, -4], [9, 0, TL + 4], [-9, 0, TL + 4]], 'rgba(48,60,43,.05)');
+    poly([[-9, 0, TL + 4], [9, 0, TL + 4], [9, 2.5, TL + 4], [-9, 2.5, TL + 4]], 'rgba(48,60,43,.12)', 'rgba(48,60,43,.35)', 1);
+    for (let x = -8; x <= 8; x += 2) line([x, 0, TL + 4], [x, 2.5, TL + 4], 'rgba(48,60,43,.2)', 1);
+    poly([[-DW, 0, 0], [DW, 0, 0], [DW, 0, TL], [-DW, 0, TL]], 'rgba(48,60,43,.09)');
+    [-DW, DW, -SW, SW].forEach(x => line([x, 0, 0], [x, 0, TL]));
+    line([-DW, 0, 0], [DW, 0, 0], INK, 2.5); line([-DW, 0, TL], [DW, 0, TL], INK, 2.5);
+    line([-SW, 0, THALF - SVC], [SW, 0, THALF - SVC]); line([-SW, 0, THALF + SVC], [SW, 0, THALF + SVC]);
+    line([0, 0, THALF - SVC], [0, 0, THALF + SVC]);
+    line([0, 0, 0], [0, 0, 0.3]); line([0, 0, TL], [0, 0, TL - 0.3]);
+    const items = [];
+    if (tennis.me && !title) {
+      items.push({z: tennis.cpu.z, d: () => figure(g, tennis.cpu, MID, -1, PT)});
+      items.push({z: tennis.me.z, d: () => figure(g, tennis.me, INK, 1, PT)});
+    }
+    items.push({z: THALF, d: () => {
+      const px = DW + 0.914;
+      poly([[-px, 0, THALF], [px, 0, THALF], [px, TNET, THALF], [-px, TNET, THALF]], 'rgba(48,60,43,.22)');
+      for (let x = -px + 0.5; x < px; x += 0.5) line([x, 0, THALF], [x, TNET, THALF], 'rgba(48,60,43,.25)', 1);
+      line([-px, TNET, THALF], [px, TNET, THALF], INK, 2.5);
+      line([-px, 0, THALF], [-px, 1.07, THALF], INK, 3); line([px, 0, THALF], [px, 1.07, THALF], INK, 3);
+    }});
+    const b = title ? {x: 2, y: BR + Math.abs(Math.sin(t * 2.4)) * 2.4, z: 7} : tennis.ball;
+    if (b) items.push({z: b.z, d: () => {
+      const [sx, sy, ss] = PT(b.x, 0, b.z), [bx, by, bs] = PT(b.x, b.y, b.z);
+      g.fillStyle = 'rgba(48,60,43,.4)';
+      g.beginPath(); g.ellipse(sx, sy, Math.max(2, BR * ss * 1.5), Math.max(1, BR * ss * 0.6), 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = INK;
+      g.beginPath(); g.arc(bx, by, Math.max(2.5, BR * bs * 1.3), 0, Math.PI * 2); g.fill();
+    }});
+    items.sort((a, c) => c.z - a.z).forEach(i => i.d());
+    g.globalAlpha = 1;
+    if (!title && tennis.banner && tennis.state === 'play') {
+      const fs = Math.max(14, Math.min(20, Math.round(w / 24))), y = Math.max(70, h * 0.17);
+      g.font = '700 ' + fs + 'px Menlo, monospace';
+      const bw = Math.max(g.measureText(tennis.banner.msg).width, g.measureText(tennis.banner.sub || '').width * 0.6) + 36;
+      g.fillStyle = 'rgba(165,170,123,.92)'; g.fillRect(w / 2 - bw / 2, y - fs - 4, bw, fs * 2 + 22);
+      g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(w / 2 - bw / 2, y - fs - 4, bw, fs * 2 + 22);
+      text(g, tennis.banner.msg, w / 2, y, fs);
+      if (tennis.banner.sub) text(g, tennis.banner.sub, w / 2, y + fs + 2, Math.round(fs * 0.6), 'center', MID);
+    }
+    if (!title && tennis.bubble) {
+      const p = tennis.bubble.p, [fx, fy, s] = PT(p.x, 0, p.z);
+      speech(g, w, tennis.bubble.txt, fx, fy - 18 * s / 10);
+    }
+  };
+
   // ---------- Menu and routing ----------
-  const games = {star, brick, padel};
+  const games = {tennis, brick, padel};
   const gameBtns = [...document.querySelectorAll('.game')];
-  const names = {menu: 'Game menu', star: 'Star Drifter', brick: 'Brick', padel: '3D Padel'};
+  const names = {menu: 'Game menu', tennis: 'Tennis', brick: 'Brick', padel: '3D Padel'};
   let sel = 0;
   const select = (i) => { sel = (i + gameBtns.length) % gameBtns.length; gameBtns.forEach((g, j) => g.classList.toggle('sel', j === sel)); };
-  const LABELS = {menu: ['OK', 'BACK'], star: ['SHOOT', 'DASH'], brick: ['TURN', 'DROP'], padel: ['DRIVE', 'LOB']};
+  const LABELS = {menu: ['OK', 'BACK'], tennis: ['DRIVE', 'LOB'], brick: ['TURN', 'DROP'], padel: ['DRIVE', 'LOB']};
   const setView = (v) => {
     screen.dataset.view = v; screen.setAttribute('aria-label', names[v]);
     document.getElementById('lblA').textContent = LABELS[v][0];
